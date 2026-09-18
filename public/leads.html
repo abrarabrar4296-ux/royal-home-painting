@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leads Spreadsheet Dashboard — Royal Home Painting</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    body {
+      background-color: #F4EFEA;
+      color: #111111;
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dashboard-header {
+      background: #000000;
+      color: #ffffff;
+      padding: 18px 28px;
+      border-bottom: 4px solid var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .dashboard-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .dashboard-logo-bg {
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 4px;
+    }
+
+    .dashboard-logo-img {
+      height: 38px;
+      width: auto;
+      display: block;
+    }
+
+    .dashboard-title-wrap h1 {
+      font-size: 1.35rem;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+
+    .dashboard-title-wrap p {
+      font-size: 0.8rem;
+      color: #bbbbbb;
+      margin: 2px 0 0 0;
+    }
+
+    .dashboard-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-dash {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-dash-primary {
+      background-color: var(--color-primary);
+      color: #ffffff;
+    }
+    .btn-dash-primary:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .btn-dash-success {
+      background-color: #107C41; /* Excel green */
+      color: #ffffff;
+    }
+    .btn-dash-success:hover {
+      background-color: #0B5C30;
+    }
+
+    .btn-dash-sheet {
+      background-color: #0F9D58; /* Google Sheets green */
+      color: #ffffff;
+    }
+    .btn-dash-sheet:hover {
+      background-color: #0B7A44;
+    }
+
+    .btn-dash-secondary {
+      background-color: #222222;
+      color: #ffffff;
+      border-color: #444444;
+    }
+    .btn-dash-secondary:hover {
+      background-color: #333333;
+    }
+
+    /* Main Container */
+    .dashboard-main {
+      flex: 1;
+      padding: 28px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #DFD7CC;
+      border-radius: 8px;
+      padding: 18px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-val {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      color: var(--color-black);
+      line-height: 1;
+    }
+
+    .stat-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666666;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    /* Controls Bar */
+    .table-controls {
+      background: #ffffff;
+      border: 1px solid #DFD7CC;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .search-input {
+      padding: 10px 14px;
+      border: 1px solid #D2C7B8;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      min-width: 280px;
+    }
+
+    .filter-select {
+      padding: 10px 14px;
+      border: 1px solid #D2C7B8;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #ffffff;
+    }
+
+    /* Spreadsheet Table */
+    .sheet-wrapper {
+      background: #ffffff;
+      border: 1px solid #D0C5B5;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      overflow-x: auto;
+    }
+
+    .sheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .sheet-table th {
+      background-color: var(--color-primary);
+      color: #ffffff;
+      font-weight: 700;
+      padding: 14px 18px;
+      text-align: left;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sheet-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid #EBE4D8;
+      border-right: 1px solid #EBE4D8;
+      vertical-align: middle;
+      color: #222222;
+    }
+
+    .sheet-table tr:nth-child(even) {
+      background-color: #FAF7F2;
+    }
+
+    .sheet-table tr:hover {
+      background-color: #FFF5EC;
+    }
+
+    .lead-badge {
+      display: inline-block;
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      color: var(--color-slate);
+      background: #E8EFF2;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .service-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .pill-painting {
+      background: #FFF1E6;
+      color: #C44A05;
+      border: 1px solid #F5C7A9;
+    }
+
+    .pill-waterproofing {
+      background: #E5F3F7;
+      color: #14495F;
+      border: 1px solid #B0D7E3;
+    }
+
+    .pill-both {
+      background: #EBF8EE;
+      color: #1A7F37;
+      border: 1px solid #BEE4C5;
+    }
+
+    .phone-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-cell-wa {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #25D366;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: transform 0.15s ease;
+    }
+
+    .btn-cell-wa:hover {
+      transform: scale(1.15);
+    }
+
+    .notes-cell {
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-style: italic;
+      color: #555555;
+    }
+
+    .status-select {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #D0C5B5;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: #ffffff;
+    }
+
+    /* Modal Google Sheets Info */
+    .sheet-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .sheet-modal.active {
+      display: flex;
+    }
+
+    .sheet-modal-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 660px;
+      width: 100%;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .code-box {
+      background: #1e1e1e;
+      color: #4ec9b0;
+      padding: 14px 18px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      margin: 14px 0;
+      word-break: break-all;
+      user-select: all;
+      border: 1px solid #333333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dashboard Top Header -->
+  <header class="dashboard-header">
+    <div class="dashboard-brand">
+      <div class="dashboard-logo-bg">
+        <img src="/assets/logo.png" alt="Royal Home Painting Logo" class="dashboard-logo-img">
+      </div>
+      <div class="dashboard-title-wrap">
+        <h1>Customer Leads Live Sheet</h1>
+        <p>Royal Home Painting &bull; Auto-syncing from Website Form &bull; Bangalore</p>
+      </div>
+    </div>
+
+    <div class="dashboard-actions">
+      <a href="/" class="btn-dash btn-dash-secondary">🌐 View Website</a>
+      <a href="/api/leads/export-excel" class="btn-dash btn-dash-success">📊 Download Excel (.xlsx)</a>
+      <a href="/api/leads.csv" download="royal_home_painting_leads.csv" class="btn-dash btn-dash-primary">📄 Download CSV</a>
+      <button type="button" class="btn-dash btn-dash-sheet" onclick="openGoogleSheetModal()">⚡ Connect to Google Sheets</button>
+      <button type="button" class="btn-dash btn-dash-secondary" onclick="clearAllTestLeads()" style="border-color: #e57373; color: #d32f2f;" title="Delete all dummy/test leads">🗑️ Clear Leads</button>
+      <button type="button" class="btn-dash btn-dash-secondary" onclick="loadLeads()" title="Refresh Data">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="dashboard-main">
+    <!-- Stats Row -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="stat-total">0</div>
+          <div class="stat-title">Total Customer Leads</div>
+        </div>
+        <div style="font-size: 2.2rem;">📋</div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="stat-painting">0</div>
+          <div class="stat-title">House Painting Requests</div>
+        </div>
+        <div style="font-size: 2.2rem;">🖌️</div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="stat-waterproofing">0</div>
+          <div class="stat-title">Waterproofing Requests</div>
+        </div>
+        <div style="font-size: 2.2rem;">🛡️</div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-val" id="stat-both">0</div>
+          <div class="stat-title">Combined Projects</div>
+        </div>
+        <div style="font-size: 2.2rem;">⭐</div>
+      </div>
+    </div>
+
+    <!-- Table Filters & Search -->
+    <div class="table-controls">
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+        <input type="text" id="search-box" class="search-input" placeholder="🔍 Search name, phone, or Bangalore area..." oninput="filterLeads()">
+        
+        <select id="service-filter" class="filter-select" onchange="filterLeads()">
+          <option value="ALL">All Services</option>
+          <option value="House Painting">House Painting</option>
+          <option value="Terrace Waterproofing">Terrace Waterproofing</option>
+          <option value="Both">Both Painting & Waterproofing</option>
+        </select>
+      </div>
+
+      <div style="font-size: 0.85rem; color: #666666;" id="sync-indicator">
+        🟢 Live Database: <strong id="last-updated">Updating...</strong>
+      </div>
+    </div>
+
+    <!-- Spreadsheet Data Table -->
+    <div class="sheet-wrapper">
+      <table class="sheet-table">
+        <thead>
+          <tr>
+            <th>Lead ID</th>
+            <th>Received Date & Time</th>
+            <th>Customer Name</th>
+            <th>Phone / WhatsApp</th>
+            <th>Bangalore Locality</th>
+            <th>Service Required</th>
+            <th>Customer Notes</th>
+            <th>Lead Action</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: #777777;">Loading live leads...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Google Sheets Direct Connection Modal -->
+  <div class="sheet-modal" id="sheet-modal">
+    <div class="sheet-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+        <h2 style="font-size: 1.35rem; margin: 0; color: #0F9D58; display: flex; align-items: center; gap: 8px;">
+          <span>📊</span> Connect Google Sheets
+        </h2>
+        <button onclick="closeGoogleSheetModal()" style="background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #888; line-height: 1;">&times;</button>
+      </div>
+
+      <!-- Localhost Notice (shown dynamically when on localhost) -->
+      <div id="localhost-alert" style="display: none; background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+        <div style="font-weight: 700; color: #D84315; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
+          ⚠️ Why Google Sheets shows "Could not fetch url: http://localhost:3000..."
+        </div>
+        <div style="font-size: 0.83rem; color: #5D4037; line-height: 1.45;">
+          Google Sheets runs on <strong>Google's cloud servers</strong>, which cannot reach private <code>localhost</code> URLs on your computer. When deployed to a public domain, <code>=IMPORTDATA()</code> will sync live.
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div style="margin-bottom: 18px;">
+        <!-- Option 1: Direct File Import -->
+        <div style="background: #F9F9F9; border: 1px solid #E0E0E0; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
+          <div style="font-weight: 700; color: #1A7F37; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>1️⃣ Direct Import to Google Sheets (Instant)</span>
+            <span style="font-size: 0.72rem; background: #E6F4EA; color: #137333; padding: 2px 7px; border-radius: 10px; font-weight: 600;">Works on Localhost</span>
+          </div>
+          <p style="font-size: 0.83rem; color: #555; margin: 0 0 10px 0; line-height: 1.4;">
+            Download all current leads right now and import them into Google Sheets in 10 seconds:
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/api/leads.csv" download="royal_home_painting_leads.csv" class="btn-dash btn-dash-primary" style="padding: 7px 13px; font-size: 0.8rem; text-decoration: none;">📄 Download CSV</a>
+            <a href="/api/leads/export-excel" download="Royal_Home_Painting_Leads_All.xlsx" class="btn-dash btn-dash-success" style="padding: 7px 13px; font-size: 0.8rem; text-decoration: none;">📥 Export Excel (.xlsx)</a>
+            <a href="https://sheets.new" target="_blank" class="btn-dash btn-dash-secondary" style="padding: 7px 13px; font-size: 0.8rem; text-decoration: none;">Open sheets.new ↗</a>
+          </div>
+          <div style="font-size: 0.76rem; color: #777; margin-top: 8px;">
+            In Google Sheets: Click <strong>File &gt; Import &gt; Upload</strong> and choose the downloaded file.
+          </div>
+        </div>
+
+        <!-- Option 2: Automatic Webhook -->
+        <div style="background: #F9F9F9; border: 1px solid #E0E0E0; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
+          <div style="font-weight: 700; color: #0F9D58; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>2️⃣ Real-Time Auto Sync (Google Apps Script)</span>
+            <span style="font-size: 0.72rem; background: #E8F0FE; color: #1A73E8; padding: 2px 7px; border-radius: 10px; font-weight: 600;">Recommended</span>
+          </div>
+          <p style="font-size: 0.83rem; color: #555; margin: 0 0 8px 0; line-height: 1.4;">
+            Pushes every new lead directly into your Google Sheet under <strong>royalhomepainting11@gmail.com</strong> in real-time. Works 100% reliably on localhost!
+          </p>
+          <div style="font-size: 0.8rem; color: #444; background: #FFF; border: 1px solid #DDD; border-radius: 6px; padding: 10px; line-height: 1.5;">
+            1. Open <a href="https://sheets.new" target="_blank" style="color: #0F9D58; font-weight: 700;">sheets.new</a> &gt; Click <strong>Extensions &gt; Apps Script</strong>.<br>
+            2. Paste the code from <code>google-apps-script.js</code> in this project.<br>
+            3. Click <strong>Deploy &gt; New deployment &gt; Web app</strong> (Access: Anyone).<br>
+            4. Paste the Web App URL into your <code>.env</code> file under <code>GOOGLE_SHEET_WEBHOOK_URL=...</code>.
+          </div>
+        </div>
+
+        <!-- Option 3: =IMPORTDATA formula -->
+        <div style="background: #F9F9F9; border: 1px solid #E0E0E0; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-weight: 700; color: #1A73E8; margin-bottom: 4px;">
+            3️⃣ Google Sheets =IMPORTDATA Formula (For Live Public Domain)
+          </div>
+          <p style="font-size: 0.83rem; color: #555; margin: 0 0 6px 0; line-height: 1.4;">
+            Once hosted on a public domain (or via <code>npx localtunnel --port 3000</code>), paste this into cell <strong>A1</strong> of Google Sheets:
+          </p>
+          <div class="code-box" id="formula-box" style="margin: 6px 0 10px 0; font-size: 0.88rem; padding: 10px 14px;">=IMPORTDATA(window.location.origin + "/api/leads.csv")</div>
+          <button class="btn-dash btn-dash-primary" onclick="copyFormula()" style="font-size: 0.8rem; padding: 6px 14px;">📋 Copy Formula</button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-dash btn-dash-secondary" onclick="closeGoogleSheetModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    let allLeads = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLeads();
+      // Auto-poll every 10 seconds for real-time updates
+      setInterval(loadLeads, 10000);
+
+      // Check if running on localhost to show helpful warning
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const localhostAlert = document.getElementById('localhost-alert');
+      if (localhostAlert && isLocalhost) {
+        localhostAlert.style.display = 'block';
+      }
+
+      // Set formula URL in modal (uses active Cloudflare tunnel on localhost)
+      const formulaEl = document.getElementById('formula-box');
+      if (formulaEl) {
+        const tunnelBase = isLocalhost ? 'https://restoration-identifier-riders-mass.trycloudflare.com' : window.location.origin;
+        formulaEl.textContent = `=IMPORTDATA("${tunnelBase}/api/leads.csv")`;
+      }
+    });
+
+    async function loadLeads() {
+      try {
+        const response = await fetch('/api/leads');
+        const data = await response.json();
+        
+        if (data.success) {
+          allLeads = data.leads || [];
+          updateStats(allLeads);
+          filterLeads();
+          document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-IN');
+        }
+      } catch (err) {
+        console.error('Failed to load leads:', err);
+      }
+    }
+
+    function updateStats(leads) {
+      document.getElementById('stat-total').textContent = leads.length;
+      
+      const paintingCount = leads.filter(l => (l.service || '').includes('House Painting') && !(l.service || '').includes('Both')).length;
+      document.getElementById('stat-painting').textContent = paintingCount;
+
+      const waterproofingCount = leads.filter(l => (l.service || '').includes('Waterproofing') && !(l.service || '').includes('Both')).length;
+      document.getElementById('stat-waterproofing').textContent = waterproofingCount;
+
+      const bothCount = leads.filter(l => (l.service || '').includes('Both')).length;
+      document.getElementById('stat-both').textContent = bothCount;
+    }
+
+    function filterLeads() {
+      const query = (document.getElementById('search-box').value || '').toLowerCase().trim();
+      const serviceFilter = document.getElementById('service-filter').value;
+
+      const filtered = allLeads.filter(lead => {
+        const matchSearch = !query || 
+          (lead.name && lead.name.toLowerCase().includes(query)) ||
+          (lead.phone && lead.phone.toLowerCase().includes(query)) ||
+          (lead.area && lead.area.toLowerCase().includes(query)) ||
+          (lead.notes && lead.notes.toLowerCase().includes(query));
+
+        let matchService = true;
+        if (serviceFilter !== 'ALL') {
+          matchService = (lead.service || '').includes(serviceFilter);
+        }
+
+        return matchSearch && matchService;
+      });
+
+      renderTable(filtered);
+    }
+
+    function renderTable(leads) {
+      const tbody = document.getElementById('leads-tbody');
+      if (!tbody) return;
+
+      if (!leads.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 36px; color: #888;">No matching leads found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = leads.map(lead => {
+        const idFormatted = `#RHP-${String(lead.id).padStart(4, '0')}`;
+        
+        // Service pill class
+        let pillClass = 'pill-painting';
+        if ((lead.service || '').includes('Both')) {
+          pillClass = 'pill-both';
+        } else if ((lead.service || '').includes('Waterproofing')) {
+          pillClass = 'pill-waterproofing';
+        }
+
+        // WhatsApp direct customer message link
+        const cleanPhone = (lead.phone || '').replace(/\D/g, '');
+        const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+        const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(
+          `Hi ${lead.name}, thank you for contacting Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When can our specialist visit for your free inspection?`
+        )}`;
+
+        return `
+          <tr>
+            <td><span class="lead-badge">${idFormatted}</span></td>
+            <td style="color: #666; font-size: 0.85rem;">${lead.created_at || 'Just now'}</td>
+            <td><strong>${escapeHtml(lead.name)}</strong></td>
+            <td>
+              <div class="phone-cell">
+                <a href="tel:${lead.phone}" style="font-weight: 700; color: #C44A05; text-decoration: underline;">
+                  ${escapeHtml(lead.phone)}
+                </a>
+                <a href="${waUrl}" target="_blank" rel="noopener" class="btn-cell-wa" title="Message customer on WhatsApp">
+                  💬
+                </a>
+              </div>
+            </td>
+            <td>${escapeHtml(lead.area || 'Bangalore')}</td>
+            <td><span class="service-pill ${pillClass}">${escapeHtml(lead.service || 'House Painting')}</span></td>
+            <td class="notes-cell" title="${escapeHtml(lead.notes || 'None')}">${escapeHtml(lead.notes || '—')}</td>
+            <td>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <a href="${waUrl}" target="_blank" class="btn-dash btn-dash-success" style="padding: 6px 12px; font-size: 0.78rem;">
+                  📞 Contact
+                </a>
+                <button onclick="deleteLeadRow(${lead.id})" class="btn-dash btn-dash-secondary" style="padding: 6px 9px; font-size: 0.78rem; border-color: #ef9a9a; color: #c62828; cursor: pointer;" title="Delete this lead">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function deleteLeadRow(id) {
+      if (!confirm(`Are you sure you want to delete lead #RHP-${String(id).padStart(4, '0')}?`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          allLeads = allLeads.filter(l => l.id !== id);
+          updateStats(allLeads);
+          filterLeads();
+        } else {
+          alert('Failed to delete lead: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error deleting lead: ' + err.message);
+      }
+    }
+
+    async function clearAllTestLeads() {
+      if (!confirm('Are you sure you want to delete all leads in the database? This will clear all test records.')) {
+        return;
+      }
+      try {
+        const res = await fetch('/api/leads/clear-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          allLeads = [];
+          updateStats(allLeads);
+          filterLeads();
+          alert('All test leads have been cleared successfully!');
+        } else {
+          alert('Failed to clear leads: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error clearing leads: ' + err.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[m]);
+    }
+
+    function openGoogleSheetModal() {
+      document.getElementById('sheet-modal').classList.add('active');
+    }
+
+    function closeGoogleSheetModal() {
+      document.getElementById('sheet-modal').classList.remove('active');
+    }
+
+    function copyFormula() {
+      const formula = document.getElementById('formula-box').textContent;
+      navigator.clipboard.writeText(formula).then(() => {
+        alert('Formula copied! Paste it in Cell A1 of your Google Sheet.');
+      });
+    }
+  </script>
+</body>
+</html>
