@@ -554,17 +554,25 @@
         localhostAlert.style.display = 'block';
       }
 
+      const isGithubPages = window.location.hostname.includes('github.io');
+      const API_BASE = isGithubPages ? 'https://royal-home-painting.vercel.app' : '';
+
       // Set formula URL in modal (uses active Cloudflare tunnel on localhost)
       const formulaEl = document.getElementById('formula-box');
       if (formulaEl) {
-        const tunnelBase = isLocalhost ? 'https://restoration-identifier-riders-mass.trycloudflare.com' : window.location.origin;
+        const tunnelBase = isLocalhost 
+          ? 'https://restoration-identifier-riders-mass.trycloudflare.com' 
+          : (isGithubPages ? 'https://royal-home-painting.vercel.app' : window.location.origin);
         formulaEl.textContent = `=IMPORTDATA("${tunnelBase}/api/leads.csv")`;
       }
     });
 
+    const isGithubPages = window.location.hostname.includes('github.io');
+    const API_BASE = isGithubPages ? 'https://royal-home-painting.vercel.app' : '';
+
     async function loadLeads() {
       try {
-        const response = await fetch('/api/leads');
+        const response = await fetch(`${API_BASE}/api/leads`);
         const data = await response.json();
         
         if (data.success) {
@@ -678,7 +686,7 @@
         return;
       }
       try {
-        const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/leads/${id}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
           allLeads = allLeads.filter(l => l.id !== id);
@@ -697,7 +705,7 @@
         return;
       }
       try {
-        const res = await fetch('/api/leads/clear-all', { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/leads/clear-all`, { method: 'POST' });
         const data = await res.json();
         if (data.success) {
           allLeads = [];

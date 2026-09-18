@@ -47,7 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/leads', {
+      const apiEndpoint = window.location.hostname.includes('github.io')
+        ? 'https://royal-home-painting.vercel.app/api/leads'
+        : '/api/leads';
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
