@@ -150,10 +150,33 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }
 });
 
+window.switchDeviceTab = function(tabName, btn) {
+  document.querySelectorAll('.device-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.device-panel').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const panel = document.getElementById('panel-' + tabName);
+  if (panel) panel.classList.add('active');
+};
+
 window.openAppModal = function(e) {
   if (e) e.preventDefault();
   const modal = document.getElementById('app-modal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+
+    // Auto-detect user operating system to preselect the most relevant tab
+    const ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+      const iosBtn = document.querySelector(".device-tab-btn[onclick*='ios']");
+      if (iosBtn) window.switchDeviceTab('ios', iosBtn);
+    } else if (/Android/.test(ua)) {
+      const androidBtn = document.querySelector(".device-tab-btn[onclick*='android']");
+      if (androidBtn) window.switchDeviceTab('android', androidBtn);
+    } else if (/Win/.test(ua)) {
+      const winBtn = document.querySelector(".device-tab-btn[onclick*='windows']");
+      if (winBtn) window.switchDeviceTab('windows', winBtn);
+    }
+  }
 };
 
 window.closeAppModal = function() {

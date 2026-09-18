@@ -2,9 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Leads Spreadsheet Dashboard — Royal Home Painting</title>
   
+  <!-- Progressive Web App (PWA) & iOS / iPhone Support -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Royal Leads">
+  <link rel="apple-touch-icon" href="/assets/logo.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -18,6 +26,48 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-header {
+        padding: 16px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+      }
+      .dashboard-actions {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+      }
+      .btn-dash {
+        padding: 8px 12px !important;
+        font-size: 0.78rem !important;
+      }
+      .dashboard-controls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+      }
+      .search-input {
+        min-width: 100% !important;
+        font-size: 16px !important;
+      }
+      .filter-select {
+        font-size: 16px !important;
+      }
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      .stat-card {
+        padding: 12px 14px !important;
+      }
+      .stat-val {
+        font-size: 1.5rem !important;
+      }
+      .dashboard-container {
+        padding: 12px !important;
+      }
     }
 
     .dashboard-header {
