@@ -2,9 +2,16 @@ const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
 
-const exportsDir = path.join(__dirname, '..', 'exports');
-if (!fs.existsSync(exportsDir)) {
-  fs.mkdirSync(exportsDir, { recursive: true });
+const exportsDir = process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME
+  ? path.join('/tmp', 'exports')
+  : path.join(__dirname, '..', 'exports');
+
+try {
+  if (!fs.existsSync(exportsDir)) {
+    fs.mkdirSync(exportsDir, { recursive: true });
+  }
+} catch (e) {
+  // Safe to ignore in read-only serverless filesystems
 }
 
 /**
@@ -135,7 +142,7 @@ async function generateLeadExcel(lead) {
 
   const buffer = await workbook.xlsx.writeBuffer();
   try {
-    if (!process.env.NETLIFY) {
+    if (!process.env.NETLIFY && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
       fs.writeFileSync(filepath, buffer);
     }
   } catch (err) {
