@@ -17,6 +17,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <!-- SheetJS Library for Instant Client-Side Excel Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     body {
@@ -425,8 +427,8 @@
     <div class="dashboard-actions">
       <a href="/" class="btn-dash btn-dash-secondary">🌐 View Website</a>
       <button type="button" class="btn-dash btn-dash-primary" onclick="openAppModal(event)" style="background: #F0620D; color: #FFFFFF; font-weight: 800; border-color: #F0620D; box-shadow: 0 2px 8px rgba(240,98,13,0.3);">📱 Install App / Download</button>
-      <a href="/api/leads/export-excel" class="btn-dash btn-dash-success">📊 Download Excel (.xlsx)</a>
-      <a href="/api/leads.csv" download="royal_home_painting_leads.csv" class="btn-dash btn-dash-secondary">📄 Download CSV</a>
+      <button type="button" class="btn-dash btn-dash-success" onclick="downloadExcelData(event)" id="btn-download-excel">📊 Download Excel (.xlsx)</button>
+      <button type="button" class="btn-dash btn-dash-secondary" onclick="downloadCsvData(event)" id="btn-download-csv">📄 Download CSV</button>
       <button type="button" class="btn-dash btn-dash-sheet" onclick="openGoogleSheetModal()">⚡ Connect to Google Sheets</button>
       <button type="button" class="btn-dash btn-dash-secondary" onclick="clearAllTestLeads()" style="border-color: #e57373; color: #d32f2f;" title="Delete all dummy/test leads">🗑️ Clear Leads</button>
       <button type="button" class="btn-dash btn-dash-secondary" onclick="loadLeads()" title="Refresh Data">🔄 Refresh</button>
@@ -967,6 +969,151 @@
       document.querySelectorAll('.device-panel').forEach(panel => panel.classList.remove('active'));
       const target = document.getElementById('panel-' + tabName);
       if (target) target.classList.add('active');
+    }
+
+    /* Robust Multi-Platform Data Download (Excel & CSV) */
+    async function downloadExcelData(e) {
+      if (e) e.preventDefault();
+      const btn = document.getElementById('btn-download-excel');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Exporting...';
+      }
+
+      try {
+        // Ensure we have the latest leads
+        if (!allLeads || allLeads.length === 0) {
+          await loadLeads();
+        }
+
+        const leadsToExport = (allLeads && allLeads.length > 0) ? allLeads : [];
+        if (leadsToExport.length === 0) {
+          alert('No leads currently available to download.');
+          return;
+        }
+
+        // Method A: Instant, high-fidelity client-side Excel generation via SheetJS (works offline & in webview)
+        if (window.XLSX) {
+          exportWithSheetJS(leadsToExport);
+          return;
+        }
+
+        // Method B: Server-side Excel generation via Blob download
+        const res = await fetch(`${API_BASE}/api/leads/export-excel`);
+        if (!res.ok) throw new Error('Server export returned status ' + res.status);
+        const blob = await res.blob();
+        triggerBlobDownload(blob, 'Royal_Home_Painting_Leads_All.xlsx');
+      } catch (err) {
+        console.warn('Excel export failed, falling back to CSV:', err);
+        downloadCsvData();
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+    }
+
+    function exportWithSheetJS(leads) {
+      const data = leads.map((l, index) => ({
+        '#': index + 1,
+        'Lead ID': `#RHP-${String(l.id || index + 1).padStart(4, '0')}`,
+        'Date & Time': l.created_at || 'Just now',
+        'Customer Name': l.name || '',
+        'Phone Number': l.phone || '',
+        'Bangalore Area': l.area || 'Bangalore',
+        'Service Required': l.service || 'House Painting',
+        'Customer Notes': l.notes || '',
+        'Lead Status': 'Active'
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      worksheet['!cols'] = [
+        { wch: 6 },
+        { wch: 14 },
+        { wch: 22 },
+        { wch: 24 },
+        { wch: 18 },
+        { wch: 24 },
+        { wch: 30 },
+        { wch: 36 },
+        { wch: 14 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Customer Leads');
+      XLSX.writeFile(workbook, 'Royal_Home_Painting_Leads_All.xlsx');
+    }
+
+    async function downloadCsvData(e) {
+      if (e) e.preventDefault();
+      const btn = document.getElementById('btn-download-csv');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Exporting...';
+      }
+
+      try {
+        if (!allLeads || allLeads.length === 0) {
+          await loadLeads();
+        }
+
+        const leadsToExport = (allLeads && allLeads.length > 0) ? allLeads : [];
+        if (leadsToExport.length === 0) {
+          alert('No leads currently available to download.');
+          return;
+        }
+
+        const headers = ['#', 'Lead ID', 'Date & Time', 'Customer Name', 'Phone Number', 'Bangalore Area', 'Service Required', 'Customer Notes', 'Status'];
+        const escapeCsv = (val) => {
+          if (val === null || val === undefined) return '""';
+          const clean = String(val).replace(/"/g, '""');
+          return `"${clean}"`;
+        };
+
+        const rows = [headers.map(escapeCsv).join(',')];
+        leadsToExport.forEach((l, index) => {
+          rows.push([
+            escapeCsv(index + 1),
+            escapeCsv(`#RHP-${String(l.id || index + 1).padStart(4, '0')}`),
+            escapeCsv(l.created_at || ''),
+            escapeCsv(l.name || ''),
+            escapeCsv(l.phone || ''),
+            escapeCsv(l.area || 'Bangalore'),
+            escapeCsv(l.service || 'House Painting'),
+            escapeCsv(l.notes || ''),
+            escapeCsv('Active')
+          ].join(','));
+        });
+
+        // Add \uFEFF BOM for automatic UTF-8 recognition in Excel and mobile spreadsheets
+        const csvString = '\uFEFF' + rows.join('\r\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        triggerBlobDownload(blob, 'Royal_Home_Painting_Leads.csv');
+      } catch (err) {
+        alert('Error exporting CSV: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+    }
+
+    function triggerBlobDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1000);
     }
   </script>
 </body>

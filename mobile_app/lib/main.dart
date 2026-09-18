@@ -101,6 +101,21 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 return NavigationDecision.prevent;
               }
             }
+
+            // Handle file downloads externally so Android's native download manager/browser handles them
+            if (url.endsWith('.xlsx') ||
+                url.endsWith('.csv') ||
+                url.endsWith('.zip') ||
+                url.endsWith('.apk') ||
+                url.contains('/export-excel') ||
+                url.contains('/api/leads.csv') ||
+                url.contains('/downloads/')) {
+              final uri = Uri.parse(url);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                return NavigationDecision.prevent;
+              }
+            }
             return NavigationDecision.navigate;
           },
         ),

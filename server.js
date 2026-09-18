@@ -236,6 +236,7 @@ app.get('/api/leads/export-excel', async (req, res) => {
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="Royal_Home_Painting_Leads_All.xlsx"');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(buffer);
   } catch (error) {
     console.error('Error exporting all leads to Excel:', error);
