@@ -48,7 +48,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   bool _isLoading = true;
   bool _hasError = false;
 
-  final String _initialUrl = 'https://royal-home-painting.vercel.app';
+  final String _initialUrl = 'https://royal-home-painting.vercel.app/leads.html';
 
   @override
   void initState() {

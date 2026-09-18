@@ -1,11 +1,7 @@
-const CACHE_NAME = 'royal-painting-v1';
+const CACHE_NAME = 'royal-leads-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
   '/leads.html',
-  '/css/styles.css',
-  '/js/main.js',
-  '/js/lead-form.js',
+  '/css/style.css',
   '/assets/logo.png',
   '/assets/logo.svg',
   '/manifest.json'
@@ -14,7 +10,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => console.warn('PWA cache warning:', err));
+      return cache.addAll(ASSETS_TO_CACHE).catch((err) => console.warn('PWA cache item warning:', err));
     })
   );
   self.skipWaiting();
@@ -38,6 +34,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  // Network first for leads API so fresh leads are always shown
   if (event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => {
@@ -49,6 +46,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Cache first with background update for static assets & dashboard HTML
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

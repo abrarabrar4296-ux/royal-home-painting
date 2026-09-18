@@ -1,12 +1,12 @@
 {
-  "name": "Royal Home Painting",
-  "short_name": "Royal Painting",
-  "description": "Professional house painting and terrace waterproofing in Bangalore.",
-  "start_url": "/",
+  "name": "Royal Painting Leads CRM",
+  "short_name": "Royal Leads",
+  "description": "Royal Home Painting lead management, contractor inspection tracking, and WhatsApp dispatch application.",
+  "start_url": "/leads.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#F0620D",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "/assets/logo.png",

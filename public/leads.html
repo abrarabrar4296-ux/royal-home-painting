@@ -424,8 +424,9 @@
 
     <div class="dashboard-actions">
       <a href="/" class="btn-dash btn-dash-secondary">🌐 View Website</a>
+      <button type="button" class="btn-dash btn-dash-primary" onclick="openAppModal(event)" style="background: #F0620D; color: #FFFFFF; font-weight: 800; border-color: #F0620D; box-shadow: 0 2px 8px rgba(240,98,13,0.3);">📱 Install App / Download</button>
       <a href="/api/leads/export-excel" class="btn-dash btn-dash-success">📊 Download Excel (.xlsx)</a>
-      <a href="/api/leads.csv" download="royal_home_painting_leads.csv" class="btn-dash btn-dash-primary">📄 Download CSV</a>
+      <a href="/api/leads.csv" download="royal_home_painting_leads.csv" class="btn-dash btn-dash-secondary">📄 Download CSV</a>
       <button type="button" class="btn-dash btn-dash-sheet" onclick="openGoogleSheetModal()">⚡ Connect to Google Sheets</button>
       <button type="button" class="btn-dash btn-dash-secondary" onclick="clearAllTestLeads()" style="border-color: #e57373; color: #d32f2f;" title="Delete all dummy/test leads">🗑️ Clear Leads</button>
       <button type="button" class="btn-dash btn-dash-secondary" onclick="loadLeads()" title="Refresh Data">🔄 Refresh</button>
@@ -584,6 +585,112 @@
 
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
         <button class="btn-dash btn-dash-secondary" onclick="closeGoogleSheetModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Download & Install Modal (PWA, iPhone, Android, Windows) -->
+  <div class="sheet-modal" id="app-modal" onclick="if(event.target===this)closeAppModal()" role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
+    <div class="sheet-modal-card" style="max-width: 560px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #F0ECE1; padding-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="/assets/logo.png" alt="Royal Home Painting Logo" style="width: 44px; height: 44px; object-fit: contain; border-radius: 10px; background: #000; padding: 4px; border: 1px solid #E5DFD5;">
+          <div>
+            <h3 id="app-modal-title" style="margin: 0; font-size: 1.25rem; font-family: var(--font-heading); color: #111;">Install Leads Manager App</h3>
+            <p style="margin: 2px 0 0; font-size: 0.8rem; color: #666;">Royal Home Painting &bull; Real-Time Leads CRM</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAppModal()" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #888; line-height: 1;" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Device Category Tabs -->
+      <div class="device-tabs" role="tablist">
+        <button type="button" class="device-tab-btn active" onclick="switchDeviceTab('pwa', this)" role="tab">⚡ Instant App</button>
+        <button type="button" class="device-tab-btn" onclick="switchDeviceTab('ios', this)" role="tab">🍏 iPhone (iOS)</button>
+        <button type="button" class="device-tab-btn" onclick="switchDeviceTab('android', this)" role="tab">🤖 Android APK</button>
+        <button type="button" class="device-tab-btn" onclick="switchDeviceTab('windows', this)" role="tab">💻 Windows PC</button>
+      </div>
+
+      <!-- Panel 1: Instant PWA -->
+      <div id="panel-pwa" class="device-panel active">
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #111; font-size: 0.98rem;">⚡ 1-Click Instant App (PWA)</strong>
+            <span style="background: #E8F5E9; color: #2E7D32; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Recommended</span>
+          </div>
+          <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
+            Installs the Leads Manager directly to your home screen or desktop. Works offline, updates instantly, and has zero storage footprint.
+          </p>
+          <button id="pwa-install-btn" class="btn-dash btn-dash-primary" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.95rem; font-weight: 800; background: #F0620D; color: #fff;">
+            📱 Install Leads App to Device
+          </button>
+          <p id="pwa-status-hint" style="font-size: 0.76rem; color: #888; margin: 8px 0 0 0; text-align: center;">
+            Supports Chrome, Edge, Brave, Samsung Internet &amp; iOS Safari.
+          </p>
+        </div>
+      </div>
+
+      <!-- Panel 2: iPhone / iOS -->
+      <div id="panel-ios" class="device-panel">
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <strong style="color: #111; font-size: 0.98rem;">🍏 Install on iPhone &amp; iPad (Safari)</strong>
+            <span style="background: #E3F2FD; color: #1565C0; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Apple iOS</span>
+          </div>
+          
+          <div class="ios-step">
+            <span class="ios-step-num">1</span>
+            <span>In <strong>Safari</strong> on your iPhone, tap the <strong>Share icon</strong> (square with arrow up ⎋) at the bottom toolbar.</span>
+          </div>
+          <div class="ios-step">
+            <span class="ios-step-num">2</span>
+            <span>Scroll down the action sheet and tap <strong>"Add to Home Screen"</strong> (➕).</span>
+          </div>
+          <div class="ios-step">
+            <span class="ios-step-num">3</span>
+            <span>Tap <strong>"Add"</strong> at top right. The Royal Leads app icon will appear on your iPhone home screen!</span>
+          </div>
+
+          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #e0d8cc; font-size: 0.8rem; color: #666;">
+            ✨ Tip: When opened from your home screen, it launches in fullscreen app mode without Safari browser bars!
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Android APK -->
+      <div id="panel-android" class="device-panel">
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #111; font-size: 0.98rem;">🤖 Native Android APK Package</strong>
+            <span style="background: #FFF3E0; color: #E65100; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Android 8.0+</span>
+          </div>
+          <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
+            Download the official Android APK standalone application with native WhatsApp messaging and real-time refresh.
+          </p>
+          <a id="apk-download-btn" href="https://github.com/abrarabrar4296-ux/royal-home-painting/releases/download/v1.0.0/RoyalHomePainting.apk" download="RoyalHomePainting.apk" class="btn-dash btn-dash-secondary" style="display: flex; width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem; text-decoration: none; border-color: #F0620D; color: #F0620D; font-weight: 700;">
+            ⬇️ Download Android APK (v1.0.0)
+          </a>
+        </div>
+      </div>
+
+      <!-- Panel 4: Windows PC -->
+      <div id="panel-windows" class="device-panel">
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #111; font-size: 0.98rem;">💻 Windows Desktop Launcher</strong>
+            <span style="background: #E3F2FD; color: #1565C0; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Windows 10 / 11</span>
+          </div>
+          <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
+            Launches Royal Leads CRM directly as a standalone borderless Windows desktop app window with taskbar pinning.
+          </p>
+          <a id="windows-download-btn" href="/downloads/RoyalLeadsManager-Windows-App.zip" download="RoyalLeadsManager-Windows-App.zip" class="btn-dash btn-dash-secondary" style="display: flex; width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem; text-decoration: none; border-color: #14495F; color: #14495F; font-weight: 700;">
+            ⬇️ Download Windows Desktop App (.zip)
+          </a>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-dash btn-dash-secondary" onclick="closeAppModal()" style="font-size: 0.85rem; padding: 8px 20px;">Close</button>
       </div>
     </div>
   </div>
@@ -794,6 +901,72 @@
       navigator.clipboard.writeText(formula).then(() => {
         alert('Formula copied! Paste it in Cell A1 of your Google Sheet.');
       });
+    }
+
+    /* App Modal & PWA Installation Logic */
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const pwaBtn = document.getElementById('pwa-install-btn');
+      if (pwaBtn) {
+        pwaBtn.style.display = 'flex';
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered for Leads CRM:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+
+    const pwaBtn = document.getElementById('pwa-install-btn');
+    if (pwaBtn) {
+      pwaBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('User response to install prompt:', outcome);
+          deferredPrompt = null;
+        } else {
+          alert('To install the Royal Leads CRM app:\n\n• On Chrome / Edge (Desktop/Android): Tap the Install button in your browser address bar or menu.\n• On iPhone / iPad (Safari): Tap the Share button (⎋) at the bottom, then choose "Add to Home Screen" (➕).');
+        }
+      });
+    }
+
+    function openAppModal(e) {
+      if (e) e.preventDefault();
+      const modal = document.getElementById('app-modal');
+      if (modal) modal.classList.add('active');
+
+      // Auto-select tab based on user agent
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        const iosTab = document.querySelector('.device-tab-btn:nth-child(2)');
+        if (iosTab) switchDeviceTab('ios', iosTab);
+      } else if (/android/i.test(ua)) {
+        const androidTab = document.querySelector('.device-tab-btn:nth-child(3)');
+        if (androidTab) switchDeviceTab('android', androidTab);
+      } else if (/Win/i.test(ua)) {
+        const winTab = document.querySelector('.device-tab-btn:nth-child(4)');
+        if (winTab) switchDeviceTab('windows', winTab);
+      }
+    }
+
+    function closeAppModal() {
+      const modal = document.getElementById('app-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function switchDeviceTab(tabName, btnElement) {
+      document.querySelectorAll('.device-tab-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+
+      document.querySelectorAll('.device-panel').forEach(panel => panel.classList.remove('active'));
+      const target = document.getElementById('panel-' + tabName);
+      if (target) target.classList.add('active');
     }
   </script>
 </body>
