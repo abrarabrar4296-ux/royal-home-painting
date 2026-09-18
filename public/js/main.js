@@ -128,3 +128,62 @@ window.selectServiceOption = function(serviceName) {
     }
   }
 };
+
+/**
+ * Progressive Web App (PWA) & App Download Modal Handlers
+ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('ServiceWorker registration skipped:', err);
+    });
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const pwaBtn = document.getElementById('pwa-install-btn');
+  if (pwaBtn) {
+    pwaBtn.innerHTML = '⚡ Tap to Install App Directly';
+  }
+});
+
+window.openAppModal = function(e) {
+  if (e) e.preventDefault();
+  const modal = document.getElementById('app-modal');
+  if (modal) modal.classList.add('active');
+};
+
+window.closeAppModal = function() {
+  const modal = document.getElementById('app-modal');
+  if (modal) modal.classList.remove('active');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pwaBtn = document.getElementById('pwa-install-btn');
+  if (pwaBtn) {
+    pwaBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('PWA prompt response:', outcome);
+        deferredPrompt = null;
+      } else {
+        alert('To install the Royal Home Painting app:\n\n• On Android (Chrome): Tap the 3-dot menu (⋮) -> "Add to Home screen" or "Install App".\n• On iPhone (Safari): Tap Share (⎋) -> "Add to Home Screen".\n• On Desktop (Chrome/Edge): Click the Install icon in your browser address bar.');
+      }
+    });
+  }
+
+  // Close modal when clicking backdrop
+  const appModal = document.getElementById('app-modal');
+  if (appModal) {
+    appModal.addEventListener('click', (e) => {
+      if (e.target === appModal) {
+        closeAppModal();
+      }
+    });
+  }
+});
+

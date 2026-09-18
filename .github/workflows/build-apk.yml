@@ -1,0 +1,77 @@
+name: Build Android APK Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile_app/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build & Publish Royal Home Painting APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.1'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Flutter Dependencies
+        working-directory: ./mobile_app
+        run: flutter pub get
+
+      - name: Build Release APK
+        working-directory: ./mobile_app
+        run: flutter build apk --release
+
+      - name: Prepare APK Asset
+        run: |
+          mkdir -p release-output
+          cp mobile_app/build/app/outputs/flutter-apk/app-release.apk release-output/RoyalHomePainting.apk
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoyalHomePainting-APK
+          path: release-output/RoyalHomePainting.apk
+
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: Royal Home Painting Mobile App v1.0.0
+          body: |
+            ## 🎨 Royal Home Painting Official Android App (v1.0.0)
+            
+            Download the official Android mobile app for Royal Home Painting:
+            
+            - 📱 **One-Tap Quotes**: Book free on-site inspections for house painting & terrace waterproofing in Bangalore.
+            - 💬 **Instant WhatsApp**: Direct chat with certified painting specialists.
+            - ⚡ **Offline & Fast**: Optimized performance with high-resolution gallery and quote calculator.
+            
+            ### Installation Instructions:
+            1. Download `RoyalHomePainting.apk` below to your Android device.
+            2. Tap the downloaded file to install (allow "Install from Unknown Sources" if prompted).
+            3. Open the app and book your painting consultation in seconds!
+          files: release-output/RoyalHomePainting.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

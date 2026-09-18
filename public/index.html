@@ -23,6 +23,15 @@
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Progressive Web App (PWA) Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#F0620D">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Royal Painting">
+  <link rel="apple-touch-icon" href="/assets/logo.png">
 </head>
 <body>
 
@@ -42,6 +51,7 @@
           <li><a href="#why-us" class="nav-link">Why Us</a></li>
           <li><a href="#gallery" class="nav-link">Gallery</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
+          <li><a href="#download-app" class="nav-link" onclick="openAppModal(event)" style="color: #F0620D; font-weight: 700;">📱 Get App</a></li>
         </ul>
       </nav>
 
@@ -50,6 +60,9 @@
         <a href="tel:+919740318779" class="header-phone-link" aria-label="Call Royal Home Painting">
           <span>📞</span> +91 97403 18779
         </a>
+        <button type="button" class="btn btn-secondary" onclick="openAppModal(event)" style="padding: 9px 14px; font-size: 0.85rem; border-color: #F0620D; color: #F0620D; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Download Royal Home Painting App">
+          📱 App
+        </button>
         <a href="#quote-form" class="btn btn-primary" id="header-cta-btn">Get a Free Quote</a>
         <!-- Mobile menu toggle button -->
         <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
@@ -578,6 +591,72 @@
       </div>
 
       <button type="button" class="modal-close-btn" id="modal-dismiss-btn" aria-label="Dismiss">Return to website</button>
+    </div>
+  </div>
+
+  <!-- 11. APP DOWNLOAD & INSTALL MODAL -->
+  <div class="modal-backdrop" id="app-modal" role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
+    <div class="modal-dialog" style="max-width: 520px; text-align: left; padding: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EFE9E1; padding-bottom: 16px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <img src="/assets/logo.png" alt="Royal Home Painting App Logo" style="height: 48px; border-radius: 10px; border: 1px solid #eee;">
+          <div>
+            <h3 id="app-modal-title" style="margin: 0; font-size: 1.25rem; font-family: var(--font-heading); color: #111;">Royal Home Painting App</h3>
+            <span style="font-size: 0.82rem; color: #666;">Official Mobile & Desktop Application</span>
+          </div>
+        </div>
+        <button type="button" onclick="closeAppModal()" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #888; line-height: 1;" aria-label="Close modal">&times;</button>
+      </div>
+
+      <p style="font-size: 0.92rem; color: #444; line-height: 1.5; margin-bottom: 20px;">
+        Access instant painting calculators, 1-tap WhatsApp quotes, and on-site inspection tracking directly from your phone or desktop:
+      </p>
+
+      <!-- Option 1: Instant PWA Install (No downloads, Zero storage) -->
+      <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color: #111; font-size: 1rem;">⚡ Option 1: Instant App (Recommended)</strong>
+          <span style="background: #E8F5E9; color: #2E7D32; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Fast & Zero Storage</span>
+        </div>
+        <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
+          Installs directly to your home screen or desktop with its own app icon and offline support. Compatible with Android, iPhone, Windows, and Mac.
+        </p>
+        <button id="pwa-install-btn" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem;">
+          📱 Install to Home Screen
+        </button>
+      </div>
+
+      <!-- Option 2: Direct Android APK Installer -->
+      <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color: #111; font-size: 1rem;">🤖 Option 2: Download Android APK</strong>
+          <span style="background: #FFF3E0; color: #E65100; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Android v8.0+</span>
+        </div>
+        <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
+          Download the standalone Android APK installer file. Tap the file once downloaded to install directly on your device.
+        </p>
+        <a id="apk-download-btn" href="https://github.com/abrarabrar4296-ux/royal-home-painting/releases/download/v1.0.0/RoyalHomePainting.apk" download="RoyalHomePainting.apk" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem; text-decoration: none; border-color: #F0620D; color: #F0620D;">
+          ⬇️ Download Android APK (v1.0.0)
+        </a>
+      </div>
+
+      <!-- Option 3: Windows Desktop App Launcher -->
+      <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color: #111; font-size: 1rem;">💻 Option 3: Windows Desktop App (.zip)</strong>
+          <span style="background: #E3F2FD; color: #1565C0; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 12px;">Windows 10/11</span>
+        </div>
+        <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
+          Standalone desktop application launcher. Runs Royal Home Painting in a borderless desktop window.
+        </p>
+        <a id="windows-download-btn" href="/downloads/RoyalHomePainting-Windows-App.zip" download="RoyalHomePainting-Windows-App.zip" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem; text-decoration: none; border-color: #14495F; color: #14495F;">
+          ⬇️ Download Windows Desktop App (.zip)
+        </a>
+      </div>
+
+      <div style="text-align: center;">
+        <button type="button" class="btn btn-secondary" onclick="closeAppModal()" style="font-size: 0.85rem; padding: 8px 24px;">Close Window</button>
+      </div>
     </div>
   </div>
 
