@@ -36,7 +36,8 @@ async function sendLeadEmail(lead, excelData) {
   const transporter = createTransporter();
 
   // Pre-calculate clean WhatsApp link for internal contractor quick reply
-  const cleanPhone = lead.phone.replace(/[^0-9]/g, '');
+  const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+  const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
   const whatsappReplyUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(
     `Hi ${lead.name}, thank you for reaching out to Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When is a good time for our specialist to visit for your free inspection?`
   )}`;

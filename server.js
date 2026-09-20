@@ -124,27 +124,44 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
     console.log(`💾 Lead persisted in SQLite with ID: #${savedLead.id}`);
 
     // Broadcast instant real-time notification to open dashboard apps
-    broadcastNewLead(savedLead);
+    try {
+      broadcastNewLead(savedLead);
+    } catch (sseErr) {
+      console.warn('⚠️ SSE broadcast notice:', sseErr.message);
+    }
 
-    // 4. Generate professional .xlsx spreadsheet
-    const excelResult = await generateLeadExcel(savedLead);
-    console.log(`📊 Branded Excel spreadsheet created: ${excelResult.filename}`);
+    // 4. Generate professional .xlsx spreadsheet (resilient)
+    let excelResult = { filename: '', buffer: null };
+    try {
+      excelResult = await generateLeadExcel(savedLead);
+      console.log(`📊 Branded Excel spreadsheet created: ${excelResult.filename}`);
+    } catch (excelErr) {
+      console.error('⚠️ Excel generation notice (non-fatal):', excelErr.message);
+    }
 
-    // 5. Send email with .xlsx attachment via Nodemailer
-    const emailResult = await sendLeadEmail(savedLead, excelResult);
-    
-    // Update email status in SQLite
-    const emailFinalStatus = emailResult.success
-      ? (emailResult.simulated ? 'logged_no_smtp' : 'sent')
-      : 'failed';
-    await updateLeadEmailStatus(savedLead.id, emailFinalStatus, excelResult.filename);
+    // 5. Send email with .xlsx attachment via Nodemailer (resilient)
+    let emailResult = { success: false };
+    try {
+      emailResult = await sendLeadEmail(savedLead, excelResult);
+      const emailFinalStatus = emailResult.success
+        ? (emailResult.simulated ? 'logged_no_smtp' : 'sent')
+        : 'failed';
+      await updateLeadEmailStatus(savedLead.id, emailFinalStatus, excelResult.filename || '');
+    } catch (emailErr) {
+      console.error('⚠️ Email notification notice (non-fatal):', emailErr.message);
+    }
 
-    // 6. Sync lead to Google Sheet (for royalhomepainting11@gmail.com)
-    const sheetResult = await appendLeadToGoogleSheet(savedLead);
-    const sheetFinalStatus = sheetResult.success
-      ? (sheetResult.simulated ? 'logged_no_webhook' : 'synced')
-      : 'failed';
-    await updateLeadSheetStatus(savedLead.id, sheetFinalStatus);
+    // 6. Sync lead to Google Sheet (resilient)
+    let sheetResult = { success: false };
+    try {
+      sheetResult = await appendLeadToGoogleSheet(savedLead);
+      const sheetFinalStatus = sheetResult.success
+        ? (sheetResult.simulated ? 'logged_no_webhook' : 'synced')
+        : 'failed';
+      await updateLeadSheetStatus(savedLead.id, sheetFinalStatus);
+    } catch (sheetErr) {
+      console.error('⚠️ Google Sheets sync notice (non-fatal):', sheetErr.message);
+    }
 
     // 7. Pre-calculate WhatsApp quick link for the user
     const prefilledText = encodeURIComponent(
@@ -158,7 +175,7 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
       message: 'Thanks — we’ll call you within 24 hours to schedule your free on-site inspection.',
       leadId: savedLead.id,
       whatsappUrl,
-      excelGenerated: true,
+      excelGenerated: !!excelResult.buffer,
       emailDispatched: emailResult.success,
       sheetSynced: sheetResult.success
     });
