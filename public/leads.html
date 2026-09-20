@@ -1154,7 +1154,7 @@
       const toastId = 'toast-' + lead.id + '-' + Date.now();
       const cleanPhone = (lead.phone || '').replace(/\D/g, '');
       const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(
+      const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(
         `Hi ${lead.name}, thank you for contacting Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When can our specialist visit for your free inspection?`
       )}`;
 
@@ -1456,7 +1456,7 @@
         // WhatsApp direct customer message link
         const cleanPhone = (lead.phone || '').replace(/\D/g, '');
         const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-        const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(
+        const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(
           `Hi ${lead.name}, thank you for contacting Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When can our specialist visit for your free inspection?`
         )}`;
 

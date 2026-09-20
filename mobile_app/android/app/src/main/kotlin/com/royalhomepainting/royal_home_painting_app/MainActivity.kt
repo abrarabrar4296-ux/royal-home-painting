@@ -163,7 +163,7 @@ class MainActivity : FlutterActivity() {
             val cleanDigits = phone.replace(Regex("[^0-9]"), "")
             val waPhone = if (cleanDigits.length == 10) "91$cleanDigits" else cleanDigits
             val waText = Uri.encode("Hi $name, thank you for contacting Royal Home Painting regarding your $service inquiry in $area. When can we visit for inspection?")
-            val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$waPhone?text=$waText"))
+            val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse("whatsapp://send?phone=$waPhone&text=$waText"))
             val waPendingIntent = PendingIntent.getActivity(this, id + 2, waIntent, pendingIntentFlags)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                 val waAction = Notification.Action.Builder(

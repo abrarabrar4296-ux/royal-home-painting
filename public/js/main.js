@@ -7,7 +7,101 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
   initScrollReveals();
   initSmoothScroll();
+  initSocialDeepLinks();
 });
+
+/**
+ * Enhanced Instagram App redirection & WhatsApp pre-filled messaging
+ */
+function initSocialDeepLinks() {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+  const isAndroid = /Android/i.test(navigator.userAgent || '');
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+  // 1. WhatsApp Deep Linking (ensures message is automatically typed in composer)
+  document.addEventListener('click', (e) => {
+    const waLink = e.target.closest('a[href*="wa.me"], a[href*="whatsapp.com"], .floating-whatsapp, .mobile-bar-item-wa, .btn-whatsapp');
+    if (!waLink) return;
+
+    const href = waLink.getAttribute('href') || '';
+    if (!href || href === '#') return;
+
+    e.preventDefault();
+
+    let text = '';
+    let phone = '919740318779';
+
+    try {
+      const urlObj = new URL(href, window.location.href);
+      text = urlObj.searchParams.get('text') || '';
+      const phoneParam = urlObj.searchParams.get('phone');
+      if (phoneParam) {
+        phone = phoneParam.replace(/\D/g, '');
+      } else if (urlObj.pathname) {
+        const seg = urlObj.pathname.split('/').filter(Boolean);
+        if (seg.length && /^\d+$/.test(seg[seg.length - 1])) {
+          phone = seg[seg.length - 1];
+        }
+      }
+    } catch (_) {
+      const match = href.match(/[?&]text=([^&]+)/);
+      if (match) text = decodeURIComponent(match[1]);
+    }
+
+    if (!text) {
+      text = 'Hi Royal Home Painting, I would like to get a free quote for my home in Bangalore.';
+    }
+
+    const encodedText = encodeURIComponent(text);
+
+    if (isMobile) {
+      // Native scheme forces WhatsApp app to launch and pre-type the text into composer
+      const nativeScheme = `whatsapp://send?phone=${phone}&text=${encodedText}`;
+      const webFallback = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedText}`;
+
+      const startTime = Date.now();
+      window.location.href = nativeScheme;
+
+      setTimeout(() => {
+        // If app wasn't launched after 800ms, fallback to web
+        if (Date.now() - startTime < 1500 && !document.hidden) {
+          window.location.href = webFallback;
+        }
+      }, 800);
+    } else {
+      // Desktop browser -> WhatsApp Web or WhatsApp Desktop app
+      window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodedText}`, '_blank', 'noopener,noreferrer');
+    }
+  });
+
+  // 2. Instagram Deep Linking (opens native app directly without web login wall)
+  document.addEventListener('click', (e) => {
+    const igLink = e.target.closest('a[href*="instagram.com"], .instagram-link');
+    if (!igLink) return;
+
+    e.preventDefault();
+    const username = 'royalhomepainting11';
+    const webUrl = `https://www.instagram.com/${username}/`;
+
+    if (isAndroid) {
+      // Android Intent URI directly opens the Instagram App to the profile
+      window.location.href = `intent://instagram.com/_u/${username}/#Intent;package=com.instagram.android;scheme=https;end`;
+    } else if (isIOS) {
+      // iOS custom scheme opens native Instagram app, timer fallback to web
+      const startTime = Date.now();
+      window.location.href = `instagram://user?username=${username}`;
+
+      setTimeout(() => {
+        if (Date.now() - startTime < 1500 && !document.hidden) {
+          window.location.href = webUrl;
+        }
+      }, 800);
+    } else {
+      // Desktop browser
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+    }
+  });
+}
 
 /**
  * Adds background blur and shadow when scrolled

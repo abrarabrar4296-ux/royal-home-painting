@@ -81,9 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (modalWhatsAppLink) {
-        const waUrl = data.whatsappUrl || `https://wa.me/919740318779?text=${encodeURIComponent(
-          `Hi Royal Home Painting, I just submitted a quote request for ${service} in ${area || 'Bangalore'}. My name is ${name}.`
-        )}`;
+        const msg = `Hi Royal Home Painting! I just submitted a quote request for ${service} in ${area || 'Bangalore'}. My name is ${name}.`;
+        const waUrl = (data.whatsappUrl && data.whatsappUrl.includes('api.whatsapp.com'))
+          ? data.whatsappUrl
+          : `https://api.whatsapp.com/send?phone=919740318779&text=${encodeURIComponent(msg)}`;
         modalWhatsAppLink.href = waUrl;
       }
 

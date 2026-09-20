@@ -166,8 +166,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
       builder: (ctx) {
         final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
         final waPhone = cleanPhone.length == 10 ? '91$cleanPhone' : cleanPhone;
-        final waUrl =
-            'https://wa.me/$waPhone?text=${Uri.encodeComponent('Hi $name, thank you for contacting Royal Home Painting regarding your $service inquiry in $area. When can we visit for inspection?')}';
+        final waMsg = 'Hi $name, thank you for contacting Royal Home Painting regarding your $service inquiry in $area. When can we visit for inspection?';
+        final waAppUrl = 'whatsapp://send?phone=$waPhone&text=${Uri.encodeComponent(waMsg)}';
+        final waWebUrl = 'https://api.whatsapp.com/send?phone=$waPhone&text=${Uri.encodeComponent(waMsg)}';
 
         return Container(
           decoration: const BoxDecoration(
@@ -305,9 +306,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         ),
                       ),
                       onPressed: () async {
-                        final uri = Uri.parse(waUrl);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        final appUri = Uri.parse(waAppUrl);
+                        final webUri = Uri.parse(waWebUrl);
+                        if (await canLaunchUrl(appUri)) {
+                          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+                        } else if (await canLaunchUrl(webUri)) {
+                          await launchUrl(webUri, mode: LaunchMode.externalApplication);
                         }
                       },
                       icon: const Icon(Icons.chat, size: 18),
@@ -385,11 +389,42 @@ class _WebViewScreenState extends State<WebViewScreen> {
           onNavigationRequest: (NavigationRequest request) async {
             final url = request.url;
 
-            // Handle WhatsApp and Tel intents natively
+            // 1. Handle Instagram natively (opens Instagram app or external browser)
+            if (url.contains('instagram.com') || url.startsWith('instagram://')) {
+              final igAppUri = Uri.parse('instagram://user?username=royalhomepainting11');
+              final igWebUri = Uri.parse('https://www.instagram.com/royalhomepainting11/');
+              if (await canLaunchUrl(igAppUri)) {
+                await launchUrl(igAppUri, mode: LaunchMode.externalApplication);
+              } else if (await canLaunchUrl(igWebUri)) {
+                await launchUrl(igWebUri, mode: LaunchMode.externalApplication);
+              }
+              return NavigationDecision.prevent;
+            }
+
+            // 2. Handle WhatsApp, Tel, and Mailto intents natively
             if (url.startsWith('https://wa.me') ||
+                url.startsWith('https://api.whatsapp.com') ||
                 url.startsWith('whatsapp://') ||
                 url.startsWith('tel:') ||
                 url.startsWith('mailto:')) {
+              if (url.contains('whatsapp') || url.contains('wa.me')) {
+                final parsed = Uri.parse(url);
+                String? phone = parsed.queryParameters['phone'];
+                if (phone == null && url.contains('wa.me/')) {
+                  final seg = parsed.pathSegments;
+                  if (seg.isNotEmpty) phone = seg.last;
+                }
+                final text = parsed.queryParameters['text'] ?? '';
+                final cleanPhone = (phone ?? '919740318779').replaceAll(RegExp(r'\D'), '');
+                final nativeAppUri = Uri.parse(
+                  'whatsapp://send?phone=$cleanPhone&text=${Uri.encodeComponent(text)}',
+                );
+                if (await canLaunchUrl(nativeAppUri)) {
+                  await launchUrl(nativeAppUri, mode: LaunchMode.externalApplication);
+                  return NavigationDecision.prevent;
+                }
+              }
+
               final uri = Uri.parse(url);
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri, mode: LaunchMode.externalApplication);

@@ -150,7 +150,7 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
     const prefilledText = encodeURIComponent(
       `Hi Royal Home Painting! I just submitted a quote request for ${savedLead.service} in ${savedLead.area || 'Bangalore'}. My name is ${savedLead.name}.`
     );
-    const whatsappUrl = `https://wa.me/919740318779?text=${prefilledText}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=919740318779&text=${prefilledText}`;
 
     // 8. Return success response
     return res.status(201).json({
