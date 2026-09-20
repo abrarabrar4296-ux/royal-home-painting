@@ -1119,6 +1119,11 @@ p {
 }
 
 @media (max-width: 768px) {
+  .header-logo-img {
+    height: 42px;
+    max-width: 210px;
+  }
+
   .header-actions .header-phone-link {
     display: none;
   }

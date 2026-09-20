@@ -594,7 +594,7 @@
   <header class="dashboard-header">
     <div class="dashboard-brand">
       <div class="dashboard-logo-bg">
-        <img src="/assets/logo.png" alt="Royal Home Painting Logo" class="dashboard-logo-img">
+        <img src="/assets/logo.png?v=3" alt="Royal Home Painting Logo" class="dashboard-logo-img" onerror="this.onerror=null;this.src='assets/logo.png?v=3';">
       </div>
       <div class="dashboard-title-wrap">
         <h1>Customer Leads Live Sheet</h1>
@@ -944,6 +944,10 @@
     function initNotificationEngine() {
       updateSoundUI();
       updateNotificationUI();
+      if (window.__IS_NATIVE_APP__ || window.LeadNotificationChannel) {
+        const banner = document.getElementById('mobile-alert-banner');
+        if (banner) banner.style.display = 'none';
+      }
 
       // Stop tab title alert when user returns to page
       window.addEventListener('focus', stopTabTitleAlert);
@@ -1036,6 +1040,15 @@
     function updateNotificationUI() {
       const btn = document.getElementById('btn-notif-toggle');
       if (!btn) return;
+
+      if (window.__IS_NATIVE_APP__ || window.LeadNotificationChannel) {
+        btn.innerHTML = '🔔 App Alerts: Active';
+        btn.className = 'btn-dash btn-dash-notif active';
+        btn.title = 'Native notifications are active on your device.';
+        const banner = document.getElementById('mobile-alert-banner');
+        if (banner) banner.style.display = 'none';
+        return;
+      }
 
       if (!('Notification' in window)) {
         btn.innerHTML = '🔔 Alerts: N/A';

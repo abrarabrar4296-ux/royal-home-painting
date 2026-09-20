@@ -54,6 +54,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   final String _initialUrl = 'https://royal-home-painting.vercel.app/leads.html';
 
+  static const MethodChannel _notifChannel =
+      MethodChannel('com.royalhomepainting.app/notifications');
+
   Timer? _leadPollTimer;
   final Set<int> _knownLeadIds = {};
   bool _isFirstPoll = true;
@@ -61,8 +64,15 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   void initState() {
     super.initState();
+    _requestNativeNotificationPermission();
     _initWebView();
     _startLeadMonitoring();
+  }
+
+  Future<void> _requestNativeNotificationPermission() async {
+    try {
+      await _notifChannel.invokeMethod('requestPermission');
+    } catch (_) {}
   }
 
   @override
@@ -127,7 +137,19 @@ class _WebViewScreenState extends State<WebViewScreen> {
     required String area,
     required String notes,
   }) {
-    // Sound alert & vibration on mobile device
+    // 1. Post real system notification to Android status bar / lock screen
+    try {
+      _notifChannel.invokeMethod('showNotification', {
+        'id': DateTime.now().millisecondsSinceEpoch % 100000,
+        'name': name,
+        'phone': phone,
+        'service': service,
+        'area': area,
+        'notes': notes,
+      });
+    } catch (_) {}
+
+    // 2. Sound alert & vibration on mobile device
     SystemSound.play(SystemSoundType.alert);
     HapticFeedback.heavyImpact();
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -338,6 +360,19 @@ class _WebViewScreenState extends State<WebViewScreen> {
             setState(() {
               _isLoading = false;
             });
+            _controller.runJavaScript('''
+              window.__IS_NATIVE_APP__ = true;
+              const banner = document.getElementById('mobile-alert-banner');
+              if (banner) {
+                banner.style.display = 'none';
+              }
+              const notifBtn = document.getElementById('btn-notif-toggle');
+              if (notifBtn) {
+                notifBtn.innerHTML = '🔔 App Alerts: Active';
+                notifBtn.className = 'btn-dash btn-dash-notif active';
+                notifBtn.title = 'Native notifications are active on this device.';
+              }
+            ''');
           },
           onWebResourceError: (WebResourceError error) {
             if (error.isForMainFrame ?? true) {
