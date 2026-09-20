@@ -408,6 +408,183 @@
       user-select: all;
       border: 1px solid #333333;
     }
+
+    /* Notification & Alert Action Buttons */
+    .btn-dash-notif {
+      background-color: #1976D2;
+      color: #ffffff;
+      border-color: #1565C0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-dash-notif:hover {
+      background-color: #1565C0;
+    }
+    .btn-dash-notif.active {
+      background-color: #2E7D32;
+      border-color: #1B5E20;
+    }
+    .btn-dash-notif.denied {
+      background-color: #616161;
+      border-color: #424242;
+    }
+
+    /* Row Glow Animation for Fresh Incoming Leads */
+    @keyframes newLeadGlow {
+      0% { background-color: rgba(240, 98, 13, 0.35); }
+      30% { background-color: rgba(240, 98, 13, 0.22); }
+      70% { background-color: rgba(240, 98, 13, 0.12); }
+      100% { background-color: transparent; }
+    }
+
+    .row-highlight-new {
+      animation: newLeadGlow 7s ease forwards;
+    }
+
+    /* Mobile Notification Activation Card */
+    .mobile-alert-card {
+      background: linear-gradient(135deg, #E65100, #F0620D);
+      color: #ffffff;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(240, 98, 13, 0.35);
+      border: 1px solid #FF9800;
+      transition: all 0.2s ease;
+    }
+    .mobile-alert-card.active {
+      background: linear-gradient(135deg, #1B5E20, #2E7D32);
+      border-color: #4CAF50;
+      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
+    }
+
+    /* Floating In-App Toast Notification Banners */
+    .lead-toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 420px;
+      width: calc(100% - 40px);
+      pointer-events: none;
+    }
+
+    .lead-toast-card {
+      pointer-events: auto;
+      background: #111111;
+      color: #ffffff;
+      border-radius: 12px;
+      border-left: 6px solid #F0620D;
+      padding: 16px 18px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+      animation: slideInToast 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    @keyframes slideInToast {
+      from {
+        opacity: 0;
+        transform: translateY(-25px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .toast-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .toast-badge {
+      background: #F0620D;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: #aaaaaa;
+      font-size: 1.3rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+    }
+    .toast-close:hover {
+      color: #ffffff;
+    }
+
+    .toast-customer-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .toast-details {
+      font-size: 0.86rem;
+      color: #dddddd;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    .toast-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toast-btn {
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity 0.2s ease;
+    }
+    .toast-btn:hover {
+      opacity: 0.9;
+    }
+    .toast-btn-call {
+      background: #28a745;
+      color: #ffffff;
+    }
+    .toast-btn-wa {
+      background: #25D366;
+      color: #ffffff;
+    }
+    .toast-btn-view {
+      background: #2b2b2b;
+      color: #ffffff;
+      border-color: #444444;
+    }
   </style>
 </head>
 <body>
@@ -426,6 +603,9 @@
 
     <div class="dashboard-actions">
       <a href="/" class="btn-dash btn-dash-secondary">🌐 View Website</a>
+      <button type="button" class="btn-dash btn-dash-notif" id="btn-notif-toggle" onclick="toggleLeadNotifications()" title="Turn on system notifications for incoming website leads">🔔 Alerts: Enable</button>
+      <button type="button" class="btn-dash btn-dash-secondary" id="btn-sound-toggle" onclick="toggleSoundPreference()" title="Mute / Unmute lead sound chime">🔊 Sound: ON</button>
+      <button type="button" class="btn-dash btn-dash-secondary" id="btn-test-alert" onclick="triggerTestLeadAlert()" title="Simulate a test lead to preview sound and push notification">🧪 Test Alert</button>
       <button type="button" class="btn-dash btn-dash-primary" onclick="openAppModal(event)" style="background: #F0620D; color: #FFFFFF; font-weight: 800; border-color: #F0620D; box-shadow: 0 2px 8px rgba(240,98,13,0.3);">📱 Install App / Download</button>
       <button type="button" class="btn-dash btn-dash-success" onclick="downloadExcelData(event)" id="btn-download-excel">📊 Download Excel (.xlsx)</button>
       <button type="button" class="btn-dash btn-dash-secondary" onclick="downloadCsvData(event)" id="btn-download-csv">📄 Download CSV</button>
@@ -435,8 +615,27 @@
     </div>
   </header>
 
+  <!-- In-App Floating Toast Notification Container -->
+  <div id="lead-toast-container" class="lead-toast-container" aria-live="assertive"></div>
+
   <!-- Main Content Area -->
   <main class="dashboard-main">
+    <!-- Mobile High-Priority Alert Activation Card -->
+    <div id="mobile-alert-banner" class="mobile-alert-card" onclick="activateMobileAlerts()">
+      <div style="font-size: 2rem;">🔔</div>
+      <div style="flex: 1;">
+        <div style="font-weight: 800; font-size: 0.96rem; color: #ffffff;" id="mobile-alert-title">
+          📲 TAP TO ACTIVATE MOBILE LEAD ALERTS &amp; SOUND
+        </div>
+        <div style="font-size: 0.8rem; color: #FFE0B2; margin-top: 3px;" id="mobile-alert-subtitle">
+          Enables loud chime, vibration &amp; keeps screen awake so you instantly receive new website leads.
+        </div>
+      </div>
+      <button type="button" class="btn-dash" style="background: #ffffff; color: #E65100; font-weight: 800; border: none; padding: 8px 16px; font-size: 0.82rem; border-radius: 6px;" id="mobile-alert-btn">
+        ENABLE NOW
+      </button>
+    </div>
+
     <!-- Stats Row -->
     <div class="stats-bar">
       <div class="stat-card">
@@ -700,11 +899,19 @@
   <!-- Scripts -->
   <script>
     let allLeads = [];
+    let knownLeadIds = new Set();
+    let isInitialLoad = true;
+    let isSoundEnabled = localStorage.getItem('rhp_sound_enabled') !== 'false';
+    let audioCtx = null;
+    let tabTitleInterval = null;
+    const originalDocumentTitle = document.title;
 
     document.addEventListener('DOMContentLoaded', () => {
+      initNotificationEngine();
       loadLeads();
-      // Auto-poll every 10 seconds for real-time updates
-      setInterval(loadLeads, 10000);
+      connectSSE();
+      // Auto-poll every 5 seconds for resilient updates
+      setInterval(loadLeads, 5000);
 
       // Check if running on localhost to show helpful warning
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -729,13 +936,445 @@
     const isGithubPages = window.location.hostname.includes('github.io');
     const API_BASE = isGithubPages ? 'https://royal-home-painting.vercel.app' : '';
 
+    /* =========================================================
+       NOTIFICATION & AUDIO ALERT ENGINE
+       ========================================================= */
+
+    function initNotificationEngine() {
+      updateSoundUI();
+      updateNotificationUI();
+
+      // Stop tab title alert when user returns to page
+      window.addEventListener('focus', stopTabTitleAlert);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) stopTabTitleAlert();
+      });
+
+      // Warm up AudioContext on any initial user interaction
+      const unlockAudio = () => {
+        getAudioContext();
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
+      };
+      document.addEventListener('click', unlockAudio, { once: true });
+      document.addEventListener('touchstart', unlockAudio, { once: true });
+    }
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // High quality Web Audio synthesizer: 3-tone chime (E5 -> A5 -> E6)
+    function playLeadChime() {
+      if (!isSoundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+        const notes = [
+          { freq: 659.25, time: 0.00, duration: 0.14 }, // E5
+          { freq: 880.00, time: 0.13, duration: 0.16 }, // A5
+          { freq: 1318.51, time: 0.28, duration: 0.45 } // E6
+        ];
+
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(n.freq, now + n.time);
+
+          gain.gain.setValueAtTime(0.0001, now + n.time);
+          gain.gain.exponentialRampToValueAtTime(0.28, now + n.time + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + n.time + n.duration);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + n.time);
+          osc.stop(now + n.time + n.duration);
+        });
+      } catch (err) {
+        console.warn('Audio chime notice:', err);
+      }
+    }
+
+    function updateSoundUI() {
+      const btn = document.getElementById('btn-sound-toggle');
+      if (!btn) return;
+      if (isSoundEnabled) {
+        btn.innerHTML = '🔊 Sound: ON';
+        btn.title = 'Sound chime is enabled. Click to mute.';
+        btn.style.color = '#ffffff';
+      } else {
+        btn.innerHTML = '🔇 Sound: OFF';
+        btn.title = 'Sound chime is muted. Click to enable.';
+        btn.style.color = '#aaaaaa';
+      }
+    }
+
+    function toggleSoundPreference() {
+      isSoundEnabled = !isSoundEnabled;
+      localStorage.setItem('rhp_sound_enabled', isSoundEnabled);
+      updateSoundUI();
+      if (isSoundEnabled) {
+        playLeadChime();
+      }
+    }
+
+    function updateNotificationUI() {
+      const btn = document.getElementById('btn-notif-toggle');
+      if (!btn) return;
+
+      if (!('Notification' in window)) {
+        btn.innerHTML = '🔔 Alerts: N/A';
+        btn.className = 'btn-dash btn-dash-notif denied';
+        btn.title = 'Web Notifications are not supported in this browser.';
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        btn.innerHTML = '🔔 Alerts: Active';
+        btn.className = 'btn-dash btn-dash-notif active';
+        btn.title = 'Lead alerts are active. You will receive system notifications.';
+      } else if (Notification.permission === 'denied') {
+        btn.innerHTML = '🔕 Alerts: Blocked';
+        btn.className = 'btn-dash btn-dash-notif denied';
+        btn.title = 'Notifications are blocked in your browser settings. Click lock icon in URL bar to allow.';
+      } else {
+        btn.innerHTML = '🔔 Enable Alerts';
+        btn.className = 'btn-dash btn-dash-notif';
+        btn.title = 'Click to enable desktop & phone push notifications for new website leads.';
+      }
+    }
+
+    async function toggleLeadNotifications() {
+      if (!('Notification' in window)) {
+        alert('Web Notifications are not supported on this device/browser.');
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        alert('✅ Lead notifications are already enabled and active!\n\nYou will receive a sound chime, desktop notification, and visual alert whenever a customer submits an inquiry on your website.');
+        return;
+      }
+
+      if (Notification.permission === 'denied') {
+        alert('⚠️ Notifications are currently blocked in your browser.\n\nTo turn them on:\n1. Click the lock/settings icon next to the website URL in your address bar.\n2. Change "Notifications" to "Allow".\n3. Refresh this page.');
+        return;
+      }
+
+      try {
+        const permission = await Notification.requestPermission();
+        updateNotificationUI();
+        if (permission === 'granted') {
+          playLeadChime();
+          showToastAlert({
+            id: 'STATUS',
+            name: 'Alerts Successfully Enabled!',
+            phone: '+91 97403 18779',
+            area: 'Bangalore',
+            service: 'Live Notifications Active',
+            notes: 'You will receive instant alerts whenever a new inquiry is submitted on your website.'
+          }, false);
+        }
+      } catch (err) {
+        console.error('Failed to request notification permission:', err);
+      }
+    }
+
+    // System / Desktop / Mobile Push Notification
+    function triggerSystemNotification(lead) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+      const title = `🚨 New Lead: ${lead.name} (${lead.area || 'Bangalore'})`;
+      const options = {
+        body: `🛠️ ${lead.service || 'House Painting'}\n📞 Phone: ${lead.phone}\n${lead.notes ? `📝 "${lead.notes}"` : ''}`,
+        icon: '/assets/logo.png',
+        badge: '/assets/logo.png',
+        tag: 'rhp-lead-' + lead.id,
+        requireInteraction: true,
+        vibrate: [200, 100, 200, 100, 300],
+        data: { leadId: lead.id }
+      };
+
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, options);
+        }).catch(() => {
+          fallbackWindowNotification(title, options, lead.id);
+        });
+      } else {
+        fallbackWindowNotification(title, options, lead.id);
+      }
+    }
+
+    function fallbackWindowNotification(title, options, leadId) {
+      try {
+        const notif = new Notification(title, options);
+        notif.onclick = () => {
+          window.focus();
+          highlightLeadRow(leadId);
+          notif.close();
+        };
+      } catch (e) {
+        console.warn('Window notification fallback notice:', e);
+      }
+    }
+
+    // In-App Toast Banner
+    function showToastAlert(lead, showActions = true) {
+      const container = document.getElementById('lead-toast-container');
+      if (!container) return;
+
+      const toastId = 'toast-' + lead.id + '-' + Date.now();
+      const cleanPhone = (lead.phone || '').replace(/\D/g, '');
+      const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(
+        `Hi ${lead.name}, thank you for contacting Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When can our specialist visit for your free inspection?`
+      )}`;
+
+      const card = document.createElement('div');
+      card.className = 'lead-toast-card';
+      card.id = toastId;
+      card.setAttribute('role', 'alert');
+
+      card.innerHTML = `
+        <div class="toast-header">
+          <span class="toast-badge">🔔 NEW WEBSITE LEAD</span>
+          <span style="font-size: 0.74rem; color: #aaaaaa;">Just now</span>
+          <button class="toast-close" onclick="dismissToast('${toastId}')" title="Dismiss">&times;</button>
+        </div>
+        <div class="toast-customer-name">${escapeHtml(lead.name)}</div>
+        <div class="toast-details">
+          📍 <strong>${escapeHtml(lead.area || 'Bangalore')}</strong> &bull; 
+          🛠️ ${escapeHtml(lead.service || 'House Painting')}<br>
+          📞 <a href="tel:${lead.phone}" style="color: #FFB74D; font-weight: 700; text-decoration: underline;">${escapeHtml(lead.phone)}</a>
+          ${lead.notes ? `<br><em style="color: #bbb;">"${escapeHtml(lead.notes)}"</em>` : ''}
+        </div>
+        ${showActions ? `
+        <div class="toast-actions">
+          <a href="tel:${lead.phone}" class="toast-btn toast-btn-call">📞 Call Customer</a>
+          <a href="${waUrl}" target="_blank" rel="noopener" class="toast-btn toast-btn-wa">💬 WhatsApp</a>
+          <button onclick="highlightLeadRow('${lead.id}'); dismissToast('${toastId}');" class="toast-btn toast-btn-view">👁️ View in Table</button>
+        </div>
+        ` : ''}
+      `;
+
+      container.prepend(card);
+
+      setTimeout(() => {
+        dismissToast(toastId);
+      }, 14000);
+    }
+
+    function dismissToast(toastId) {
+      const el = document.getElementById(toastId);
+      if (!el) return;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-20px) scale(0.95)';
+      setTimeout(() => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 350);
+    }
+
+    // Scroll to & highlight lead row in table
+    function highlightLeadRow(leadId) {
+      const row = document.getElementById(`lead-row-${leadId}`);
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.remove('row-highlight-new');
+        void row.offsetWidth; // trigger reflow
+        row.classList.add('row-highlight-new');
+      }
+    }
+
+    // Tab title flashing alert when tab is in background
+    function startTabTitleAlert(customerName) {
+      stopTabTitleAlert();
+      let toggle = false;
+      tabTitleInterval = setInterval(() => {
+        document.title = toggle ? `🚨 (1 NEW LEAD!) ${customerName}` : originalDocumentTitle;
+        toggle = !toggle;
+      }, 1000);
+    }
+
+    function stopTabTitleAlert() {
+      if (tabTitleInterval) {
+        clearInterval(tabTitleInterval);
+        tabTitleInterval = null;
+        document.title = originalDocumentTitle;
+      }
+    }
+
+    let wakeLock = null;
+    async function activateMobileAlerts() {
+      // 1. Unlock AudioContext & play confirmation chime
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        try { await ctx.resume(); } catch (_) {}
+      }
+      playLeadChime();
+
+      // 2. Request Notification Permission
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        try {
+          await Notification.requestPermission();
+          updateNotificationUI();
+        } catch (_) {}
+      }
+
+      // 3. Request WakeLock so screen stays alive for live monitoring
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (_) {}
+      }
+
+      // 4. Vibrate phone
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate([200, 100, 200]); } catch (_) {}
+      }
+
+      // 5. Update UI
+      const banner = document.getElementById('mobile-alert-banner');
+      const title = document.getElementById('mobile-alert-title');
+      const sub = document.getElementById('mobile-alert-subtitle');
+      const btn = document.getElementById('mobile-alert-btn');
+
+      if (banner) banner.classList.add('active');
+      if (title) title.innerHTML = '✅ MOBILE ALERTS & SOUND ACTIVE';
+      if (sub) sub.innerHTML = 'Your phone will now play a loud chime, vibrate & alert you for every new website lead.';
+      if (btn) {
+        btn.textContent = 'ACTIVE';
+        btn.style.color = '#2E7D32';
+      }
+    }
+
+    // Comprehensive alert trigger combining all channels (Web, Phone, Flutter)
+    function triggerLeadAlert(lead, isTest = false) {
+      // 1. Melodic chime with 2 repeats so it rings clearly on mobile speakers
+      playLeadChime();
+      setTimeout(playLeadChime, 700);
+      setTimeout(playLeadChime, 1400);
+
+      // 2. Dispatch to Flutter Mobile App Channel (if running inside mobile app)
+      if (window.LeadNotificationChannel) {
+        try {
+          window.LeadNotificationChannel.postMessage(JSON.stringify({
+            id: lead.id,
+            name: lead.name,
+            phone: lead.phone,
+            area: lead.area,
+            service: lead.service,
+            notes: lead.notes
+          }));
+        } catch (e) {
+          console.warn('LeadNotificationChannel postMessage notice:', e);
+        }
+      }
+
+      // 3. Native system push notification
+      triggerSystemNotification(lead);
+
+      // 4. In-App Toast
+      showToastAlert(lead, !isTest || lead.phone !== '');
+
+      // 5. Heavy phone vibration pattern
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate([400, 200, 400, 200, 600]); } catch(e){}
+      }
+
+      if (document.hidden) {
+        startTabTitleAlert(lead.name);
+      }
+
+      if (!isTest) {
+        setTimeout(() => highlightLeadRow(lead.id), 400);
+      }
+    }
+
+    // Interactive Test Alert button for instant user verification
+    function triggerTestLeadAlert() {
+      getAudioContext();
+      const testLead = {
+        id: 'TEST-' + Math.floor(Math.random() * 900 + 100),
+        name: 'Ramesh Kumar (Test)',
+        phone: '+91 97403 18779',
+        area: 'Indiranagar, Bangalore',
+        service: 'House Painting & Waterproofing',
+        notes: 'Testing instant notifications for website leads.'
+      };
+      triggerLeadAlert(testLead, true);
+    }
+
+    // Real-Time SSE Listener
+    function connectSSE() {
+      if (!window.EventSource) return;
+      try {
+        const streamUrl = `${API_BASE}/api/leads/stream`;
+        const evtSource = new EventSource(streamUrl);
+
+        evtSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'NEW_LEAD' && data.lead) {
+              const lead = data.lead;
+              if (!knownLeadIds.has(lead.id)) {
+                knownLeadIds.add(lead.id);
+                allLeads.unshift(lead);
+                updateStats(allLeads);
+                filterLeads();
+                triggerLeadAlert(lead);
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-IN');
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing SSE event:', e);
+          }
+        };
+
+        evtSource.onerror = () => {
+          evtSource.close();
+          setTimeout(connectSSE, 12000);
+        };
+      } catch (err) {
+        console.warn('SSE stream notice:', err);
+      }
+    }
+
     async function loadLeads() {
       try {
         const response = await fetch(`${API_BASE}/api/leads`);
         const data = await response.json();
         
         if (data.success) {
-          allLeads = data.leads || [];
+          const incomingLeads = data.leads || [];
+          
+          if (isInitialLoad) {
+            incomingLeads.forEach(l => knownLeadIds.add(l.id));
+            isInitialLoad = false;
+          } else {
+            const freshLeads = incomingLeads.filter(l => !knownLeadIds.has(l.id));
+            if (freshLeads.length > 0) {
+              freshLeads.forEach(lead => {
+                knownLeadIds.add(lead.id);
+                triggerLeadAlert(lead);
+              });
+            }
+          }
+
+          allLeads = incomingLeads;
           updateStats(allLeads);
           filterLeads();
           document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-IN');
@@ -808,7 +1447,7 @@
         )}`;
 
         return `
-          <tr>
+          <tr id="lead-row-${lead.id}">
             <td><span class="lead-badge">${idFormatted}</span></td>
             <td style="color: #666; font-size: 0.85rem;">${lead.created_at || 'Just now'}</td>
             <td><strong>${escapeHtml(lead.name)}</strong></td>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'royal-leads-v2';
+const CACHE_NAME = 'royal-leads-v3';
 const ASSETS_TO_CACHE = [
   '/leads.html',
   '/css/style.css',
@@ -58,6 +58,23 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request);
+    })
+  );
+});
+
+// Notification click handler (focuses existing leads dashboard tab or opens new one)
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && client.url.includes('leads') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/leads.html');
+      }
     })
   );
 });

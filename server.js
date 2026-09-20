@@ -43,6 +43,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Real-Time Server-Sent Events (SSE) notification hub
+const sseClients = new Set();
+
+function broadcastNewLead(lead) {
+  if (sseClients.size === 0) return;
+  const payload = `data: ${JSON.stringify({ type: 'NEW_LEAD', lead })}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(payload);
+    } catch (err) {
+      sseClients.delete(client);
+    }
+  }
+}
+
 /**
  * Lead Capture API Endpoint
  * POST /api/leads
@@ -108,6 +123,9 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
     const savedLead = await insertLead(leadRecord);
     console.log(`💾 Lead persisted in SQLite with ID: #${savedLead.id}`);
 
+    // Broadcast instant real-time notification to open dashboard apps
+    broadcastNewLead(savedLead);
+
     // 4. Generate professional .xlsx spreadsheet
     const excelResult = await generateLeadExcel(savedLead);
     console.log(`📊 Branded Excel spreadsheet created: ${excelResult.filename}`);
@@ -152,6 +170,22 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
       error: 'An unexpected error occurred while saving your request. Please call or WhatsApp us at +91 97403 18779.'
     });
   }
+});
+
+// Real-time SSE endpoint for instant lead notification to dashboard clients
+app.get('/api/leads/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  if (res.flushHeaders) res.flushHeaders();
+
+  sseClients.add(res);
+  res.write(`data: ${JSON.stringify({ type: 'CONNECTED', clients: sseClients.size, timestamp: Date.now() })}\n\n`);
+
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
 });
 
 // Admin endpoint to view recent leads (for verification & operational ease)
