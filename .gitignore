@@ -9,6 +9,7 @@ node_modules/
 # Database files & generated exports
 data/*.db
 !data/leads_fallback.json
+!data/site_config.json
 exports/
 *.xlsx
 

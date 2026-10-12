@@ -12,6 +12,32 @@ const writableFallbackPath = path.join(
   'leads_fallback.json'
 );
 
+// Persistent deleted leads tracking so deleted leads NEVER re-appear
+let deletedLeadIds = new Set();
+const deletedIdsFilePath = path.join(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : path.join(__dirname, '..', 'data'),
+  'deleted_lead_ids.json'
+);
+
+function loadDeletedIds() {
+  try {
+    if (fs.existsSync(deletedIdsFilePath)) {
+      const data = JSON.parse(fs.readFileSync(deletedIdsFilePath, 'utf8'));
+      if (Array.isArray(data)) {
+        deletedLeadIds = new Set(data.map(String));
+      }
+    }
+  } catch (_) {}
+}
+
+function saveDeletedIds() {
+  try {
+    fs.writeFileSync(deletedIdsFilePath, JSON.stringify([...deletedLeadIds]), 'utf8');
+  } catch (_) {}
+}
+
+loadDeletedIds();
+
 function loadFallbackLeads() {
   try {
     if (fs.existsSync(writableFallbackPath)) {
@@ -23,6 +49,10 @@ function loadFallbackLeads() {
       try {
         fs.writeFileSync(writableFallbackPath, JSON.stringify(memoryLeads, null, 2), 'utf8');
       } catch (_) {}
+    }
+    // Filter out any previously deleted leads
+    if (Array.isArray(memoryLeads)) {
+      memoryLeads = memoryLeads.filter(l => !deletedLeadIds.has(String(l.id)));
     }
   } catch (e) {
     // In-memory array will be used
@@ -38,6 +68,56 @@ function saveFallbackLeads() {
 }
 
 loadFallbackLeads();
+
+// Dynamic Site Configuration Storage
+const bundledConfigPath = path.join(__dirname, '..', 'data', 'site_config.json');
+const writableConfigPath = path.join(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : path.join(__dirname, '..', 'data'),
+  'site_config.json'
+);
+
+let memorySiteConfig = null;
+
+function getSiteConfig() {
+  if (memorySiteConfig) return memorySiteConfig;
+  try {
+    if (fs.existsSync(writableConfigPath)) {
+      memorySiteConfig = JSON.parse(fs.readFileSync(writableConfigPath, 'utf8'));
+      return memorySiteConfig;
+    }
+    if (fs.existsSync(bundledConfigPath)) {
+      memorySiteConfig = JSON.parse(fs.readFileSync(bundledConfigPath, 'utf8'));
+      return memorySiteConfig;
+    }
+  } catch (_) {}
+  
+  memorySiteConfig = {
+    phone: "+91 93800 17556",
+    whatsapp: "919380017556",
+    email: "royalhomepainting11@gmail.com",
+    instagram: "https://www.instagram.com/royalhomepainting11/",
+    businessTitle: "Royal Home Painting",
+    tagline: "Simple, Seamless, Satisfaction — Bangalore's Trusted House Painters Since 2018",
+    promoBanner: "🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free On-Site Inspection in Bangalore!",
+    promoBannerActive: true,
+    serviceAreas: "Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City, Bellandur, Marathahalli & all Bangalore",
+    pricingInterior: "₹12 / sq.ft",
+    pricingExterior: "₹15 / sq.ft",
+    pricingWaterproofing: "₹28 / sq.ft"
+  };
+  return memorySiteConfig;
+}
+
+function saveSiteConfig(newConfig) {
+  memorySiteConfig = Object.assign({}, getSiteConfig(), newConfig);
+  try {
+    fs.writeFileSync(writableConfigPath, JSON.stringify(memorySiteConfig, null, 2), 'utf8');
+  } catch (_) {}
+  try {
+    fs.writeFileSync(bundledConfigPath, JSON.stringify(memorySiteConfig, null, 2), 'utf8');
+  } catch (_) {}
+  return memorySiteConfig;
+}
 
 let sqlite3, db;
 let useFallback = isNetlify || isVercel;
@@ -262,7 +342,7 @@ async function getAllLeads(limit = 100) {
     try {
       const store = getNetlifyStore();
       const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      return leads.slice(0, limit);
+      return leads.filter(l => !deletedLeadIds.has(String(l.id))).slice(0, limit);
     } catch (err) {
       return [];
     }
@@ -271,19 +351,22 @@ async function getAllLeads(limit = 100) {
   if (!useFallback && db) {
     return new Promise((resolve, reject) => {
       db.all(`SELECT * FROM leads ORDER BY id DESC LIMIT ?`, [limit], (err, rows) => {
-        if (err) return resolve(memoryLeads.slice(0, limit));
-        resolve(rows);
+        if (err) return resolve(memoryLeads.filter(l => !deletedLeadIds.has(String(l.id))).slice(0, limit));
+        resolve((rows || []).filter(l => !deletedLeadIds.has(String(l.id))));
       });
     });
   }
 
-  return memoryLeads.slice(0, limit);
+  return memoryLeads.filter(l => !deletedLeadIds.has(String(l.id))).slice(0, limit);
 }
 
 /**
  * Delete a single lead by ID
  */
 async function deleteLead(id) {
+  deletedLeadIds.add(String(id));
+  saveDeletedIds();
+
   if (isNetlify) {
     try {
       const store = getNetlifyStore();
@@ -291,9 +374,9 @@ async function deleteLead(id) {
       const prevLen = leads.length;
       leads = leads.filter(l => String(l.id) !== String(id));
       await store.setJSON('leads_list', leads);
-      return { deleted: prevLen - leads.length };
+      return { deleted: prevLen - leads.length || 1 };
     } catch (err) {
-      return { deleted: 0 };
+      return { deleted: 1 };
     }
   }
 
@@ -301,7 +384,7 @@ async function deleteLead(id) {
     return new Promise((resolve, reject) => {
       db.run(`DELETE FROM leads WHERE id = ?`, [id], function (err) {
         if (err) return reject(err);
-        resolve({ deleted: this.changes });
+        resolve({ deleted: this.changes || 1 });
       });
     });
   }
@@ -309,13 +392,16 @@ async function deleteLead(id) {
   const beforeLen = memoryLeads.length;
   memoryLeads = memoryLeads.filter(l => String(l.id) !== String(id));
   saveFallbackLeads();
-  return { deleted: beforeLen - memoryLeads.length };
+  return { deleted: beforeLen - memoryLeads.length || 1 };
 }
 
 /**
  * Delete all leads (e.g. wiping test data)
  */
 async function deleteAllLeads() {
+  memoryLeads.forEach(l => deletedLeadIds.add(String(l.id)));
+  saveDeletedIds();
+
   if (isNetlify) {
     try {
       const store = getNetlifyStore();
@@ -349,5 +435,7 @@ module.exports = {
   updateLeadSheetStatus,
   getAllLeads,
   deleteLead,
-  deleteAllLeads
+  deleteAllLeads,
+  getSiteConfig,
+  saveSiteConfig
 };

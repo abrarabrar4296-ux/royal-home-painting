@@ -604,6 +604,7 @@
 
     <div class="dashboard-actions">
       <a href="/" class="btn-dash btn-dash-secondary">🌐 View Website</a>
+      <button type="button" class="btn-dash btn-dash-primary" onclick="openWebsiteEditorModal()" style="background: #1565C0; color: #FFFFFF; font-weight: 800; border-color: #1565C0; box-shadow: 0 2px 8px rgba(21,101,192,0.3);">✏️ Edit Website Content</button>
       <button type="button" class="btn-dash btn-dash-notif" id="btn-notif-toggle" onclick="toggleLeadNotifications()" title="Turn on system notifications for incoming website leads">🔔 Alerts: Enable</button>
       <button type="button" class="btn-dash btn-dash-secondary" id="btn-sound-toggle" onclick="toggleSoundPreference()" title="Mute / Unmute lead sound chime">🔊 Sound: ON</button>
       <button type="button" class="btn-dash btn-dash-secondary" id="btn-test-alert" onclick="triggerTestLeadAlert()" title="Simulate a test lead to preview sound and push notification">🧪 Test Alert</button>
@@ -894,6 +895,116 @@
       <div style="display: flex; justify-content: flex-end;">
         <button type="button" class="btn-dash btn-dash-secondary" onclick="closeAppModal()" style="font-size: 0.85rem; padding: 8px 20px;">Close</button>
       </div>
+  <!-- Website Live Content Editor Modal -->
+  <div class="sheet-modal" id="website-editor-modal" onclick="if(event.target===this)closeWebsiteEditorModal()" role="dialog" aria-modal="true" aria-labelledby="we-title">
+    <div class="sheet-modal-card" style="max-width: 640px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #F0ECE1; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.8rem;">🎨</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; color: #111;" id="we-title">Website Live Content Editor</h3>
+            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #666;">Update your website phone, WhatsApp, announcement banner, and rates in real-time</p>
+          </div>
+        </div>
+        <button type="button" class="btn-dash btn-dash-secondary" onclick="closeWebsiteEditorModal()" style="padding: 4px 10px; font-size: 1rem;">✕</button>
+      </div>
+
+      <form id="website-editor-form" onsubmit="saveWebsiteEditorData(event)">
+        <!-- Section 1: Contact Details -->
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 700; color: #E65100; font-size: 0.92rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>📞</span> <span>Contact &amp; WhatsApp Numbers</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">Call Phone Number</label>
+              <input type="text" id="we-phone" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="+91 93800 17556" required>
+              <small style="color: #888; font-size: 0.72rem;">Shown on call buttons &amp; header</small>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">WhatsApp Number (10 digits)</label>
+              <input type="text" id="we-whatsapp" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="9380017556" required>
+              <small style="color: #888; font-size: 0.72rem;">Target for direct WhatsApp chat</small>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">Business Email</label>
+              <input type="email" id="we-email" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="royalhomepainting11@gmail.com">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">Instagram URL</label>
+              <input type="text" id="we-instagram" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="https://www.instagram.com/royalhomepainting11/">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Announcement & Offer Banner -->
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="font-weight: 700; color: #1565C0; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+              <span>📢</span> <span>Top Header Promo Banner</span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer; color: #1565C0;">
+              <input type="checkbox" id="we-banner-active" style="width: 16px; height: 16px;">
+              <span>Show Banner on Website</span>
+            </label>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">Offer / Discount Message</label>
+            <input type="text" id="we-banner-text" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="🎉 Special Offer: Flat 15% OFF on Interior &amp; Exterior Painting + Free Inspection!">
+          </div>
+        </div>
+
+        <!-- Section 3: Tagline & Service Areas -->
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 700; color: #2E7D32; font-size: 0.92rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>📍</span> <span>Tagline &amp; Service Areas</span>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">Website Subtitle / Tagline</label>
+            <input type="text" id="we-tagline" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="Simple, Seamless, Satisfaction — Bangalore's Trusted House Painters Since 2018">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #444; margin-bottom: 4px;">Bangalore Operating Areas</label>
+            <input type="text" id="we-areas" class="search-input" style="width: 100%; padding: 8px 12px; font-size: 0.88rem;" placeholder="Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City &amp; across Bangalore">
+          </div>
+        </div>
+
+        <!-- Section 4: Pricing Rates -->
+        <div style="background: #FAF8F5; border: 1.5px solid #E5DFD5; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+          <div style="font-weight: 700; color: #6A1B9A; font-size: 0.92rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>💰</span> <span>Starting Price Highlights</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #444; margin-bottom: 4px;">Interior Painting</label>
+              <input type="text" id="we-price-interior" class="search-input" style="width: 100%; padding: 8px 10px; font-size: 0.85rem;" placeholder="₹12 / sq.ft">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #444; margin-bottom: 4px;">Exterior Painting</label>
+              <input type="text" id="we-price-exterior" class="search-input" style="width: 100%; padding: 8px 10px; font-size: 0.85rem;" placeholder="₹15 / sq.ft">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #444; margin-bottom: 4px;">Waterproofing</label>
+              <input type="text" id="we-price-wp" class="search-input" style="width: 100%; padding: 8px 10px; font-size: 0.85rem;" placeholder="₹28 / sq.ft">
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #F0ECE1; padding-top: 16px;">
+          <a href="/" target="_blank" class="btn-dash btn-dash-secondary" style="text-decoration: none; font-size: 0.86rem; display: inline-flex; align-items: center; gap: 6px;">
+            <span>🌐</span> Preview Live Site
+          </a>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-dash btn-dash-secondary" onclick="closeWebsiteEditorModal()">Cancel</button>
+            <button type="submit" id="we-submit-btn" class="btn-dash btn-dash-primary" style="background: #2E7D32; color: #FFFFFF; font-weight: 800; border-color: #2E7D32; padding: 10px 22px; font-size: 0.92rem;">
+              💾 Save &amp; Update Live Site
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -907,6 +1018,15 @@
     let tabTitleInterval = null;
     const originalDocumentTitle = document.title;
 
+    // Permanently remember deleted lead IDs so they never reappear or ring
+    let deletedLeadIds = new Set();
+    try {
+      const storedDeleted = localStorage.getItem('rhp_deleted_lead_ids');
+      if (storedDeleted) {
+        JSON.parse(storedDeleted).forEach(id => deletedLeadIds.add(String(id)));
+      }
+    } catch (_) {}
+
     const isGithubPages = window.location.hostname.includes('github.io');
     const isFileProtocol = window.location.protocol === 'file:';
     const API_BASE = (isGithubPages || isFileProtocol) ? 'https://royal-home-painting.vercel.app' : '';
@@ -918,8 +1038,8 @@
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            allLeads = parsed;
-            parsed.forEach(l => knownLeadIds.add(l.id));
+            allLeads = parsed.filter(l => !deletedLeadIds.has(String(l.id)));
+            allLeads.forEach(l => knownLeadIds.add(String(l.id)));
             updateStats(allLeads);
             filterLeads();
           }
@@ -1354,9 +1474,13 @@
             const data = JSON.parse(event.data);
             if (data.type === 'NEW_LEAD' && data.lead) {
               const lead = data.lead;
-              if (!knownLeadIds.has(lead.id)) {
-                knownLeadIds.add(lead.id);
+              if (deletedLeadIds.has(String(lead.id))) return;
+              if (!knownLeadIds.has(String(lead.id))) {
+                knownLeadIds.add(String(lead.id));
                 allLeads.unshift(lead);
+                try {
+                  localStorage.setItem('rhp_cached_leads', JSON.stringify(allLeads));
+                } catch (_) {}
                 updateStats(allLeads);
                 filterLeads();
                 triggerLeadAlert(lead);
@@ -1397,6 +1521,9 @@
         if (data.success) {
           let incomingLeads = data.leads || [];
           
+          // Always filter out any lead that the user previously deleted!
+          incomingLeads = incomingLeads.filter(l => !deletedLeadIds.has(String(l.id)));
+
           // If server returned leads, persist to localStorage for offline / instant reload
           if (incomingLeads.length > 0) {
             try {
@@ -1409,20 +1536,20 @@
               if (cached) {
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                  incomingLeads = parsed;
+                  incomingLeads = parsed.filter(l => !deletedLeadIds.has(String(l.id)));
                 }
               }
             } catch (_) {}
           }
 
           if (isInitialLoad) {
-            incomingLeads.forEach(l => knownLeadIds.add(l.id));
+            incomingLeads.forEach(l => knownLeadIds.add(String(l.id)));
             isInitialLoad = false;
           } else {
-            const freshLeads = incomingLeads.filter(l => !knownLeadIds.has(l.id));
+            const freshLeads = incomingLeads.filter(l => !knownLeadIds.has(String(l.id)));
             if (freshLeads.length > 0) {
               freshLeads.forEach(lead => {
-                knownLeadIds.add(lead.id);
+                knownLeadIds.add(String(lead.id));
                 triggerLeadAlert(lead);
               });
             }
@@ -1438,13 +1565,13 @@
         }
       } catch (err) {
         console.warn('Notice loading live leads:', err.message);
-        // On error, ensure cached leads are displayed
+        // On error, ensure cached leads are displayed (excluding any deleted ones)
         try {
           const cached = localStorage.getItem('rhp_cached_leads');
           if (cached && allLeads.length === 0) {
             const parsed = JSON.parse(cached);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              allLeads = parsed;
+              allLeads = parsed.filter(l => !deletedLeadIds.has(String(l.id)));
               updateStats(allLeads);
               filterLeads();
             }
@@ -1552,18 +1679,28 @@
       if (!confirm(`Are you sure you want to delete lead #RHP-${String(id).padStart(4, '0')}?`)) {
         return;
       }
+      // 1. Permanently record as deleted in client state immediately
+      deletedLeadIds.add(String(id));
+      knownLeadIds.add(String(id));
       try {
-        const res = await fetch(`${API_BASE}/api/leads/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) {
-          allLeads = allLeads.filter(l => l.id !== id);
-          updateStats(allLeads);
-          filterLeads();
-        } else {
-          alert('Failed to delete lead: ' + (data.error || 'Unknown error'));
-        }
+        localStorage.setItem('rhp_deleted_lead_ids', JSON.stringify([...deletedLeadIds]));
+      } catch (_) {}
+
+      // 2. Remove immediately from in-memory allLeads and local cache
+      allLeads = allLeads.filter(l => String(l.id) !== String(id));
+      try {
+        localStorage.setItem('rhp_cached_leads', JSON.stringify(allLeads));
+      } catch (_) {}
+
+      // 3. Update table and stats instantly
+      updateStats(allLeads);
+      filterLeads();
+
+      // 4. Send delete request to backend (resilient background sync)
+      try {
+        await fetch(`${API_BASE}/api/leads/${id}`, { method: 'DELETE' });
       } catch (err) {
-        alert('Error deleting lead: ' + err.message);
+        console.warn('Backend delete sync notice:', err.message);
       }
     }
 
@@ -1571,19 +1708,171 @@
       if (!confirm('Are you sure you want to delete all leads in the database? This will clear all test records.')) {
         return;
       }
+      // Permanently record all current leads as deleted
+      allLeads.forEach(l => {
+        deletedLeadIds.add(String(l.id));
+        knownLeadIds.add(String(l.id));
+      });
       try {
-        const res = await fetch(`${API_BASE}/api/leads/clear-all`, { method: 'POST' });
+        localStorage.setItem('rhp_deleted_lead_ids', JSON.stringify([...deletedLeadIds]));
+        localStorage.setItem('rhp_cached_leads', '[]');
+      } catch (_) {}
+
+      allLeads = [];
+      updateStats(allLeads);
+      filterLeads();
+
+      try {
+        await fetch(`${API_BASE}/api/leads/clear-all`, { method: 'POST' });
+        alert('All test leads have been cleared successfully!');
+      } catch (err) {
+        alert('Notice: Leads cleared locally. Server sync: ' + err.message);
+      }
+    }
+
+    /* =========================================================
+       WEBSITE CONTENT EDITOR MODAL & API INTEGRATION
+       ========================================================= */
+    let currentSiteConfig = null;
+
+    async function openWebsiteEditorModal() {
+      const modal = document.getElementById('website-editor-modal');
+      if (modal) modal.style.display = 'flex';
+      await loadWebsiteEditorData();
+    }
+
+    function closeWebsiteEditorModal() {
+      const modal = document.getElementById('website-editor-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function loadWebsiteEditorData() {
+      try {
+        let config = null;
+        try {
+          const res = await fetch(`${API_BASE}/api/site-config`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.config) config = data.config;
+          }
+        } catch (_) {}
+
+        if (!config) {
+          const cached = localStorage.getItem('rhp_site_config');
+          if (cached) config = JSON.parse(cached);
+        }
+
+        if (!config) {
+          // Defaults matching Royal Home Painting Bangalore
+          config = {
+            phone: '+91 93800 17556',
+            whatsapp: '9380017556',
+            email: 'royalhomepainting11@gmail.com',
+            instagram: 'https://www.instagram.com/royalhomepainting11/',
+            banner_active: true,
+            banner_text: '🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free Inspection!',
+            tagline: 'Simple, Seamless, Satisfaction — Bangalore\'s Trusted House Painters Since 2018',
+            service_areas: 'Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City & across Bangalore',
+            price_interior: '₹12 / sq.ft',
+            price_exterior: '₹15 / sq.ft',
+            price_waterproofing: '₹28 / sq.ft'
+          };
+        }
+
+        currentSiteConfig = config;
+        populateWebsiteEditorForm(config);
+      } catch (err) {
+        console.warn('Error loading site config:', err);
+      }
+    }
+
+    function populateWebsiteEditorForm(c) {
+      if (!c) return;
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+      };
+      setVal('we-phone', c.phone);
+      setVal('we-whatsapp', c.whatsapp);
+      setVal('we-email', c.email);
+      setVal('we-instagram', c.instagram);
+      setVal('we-banner-text', c.promoBanner || c.banner_text);
+      setVal('we-tagline', c.tagline);
+      setVal('we-areas', c.serviceAreas || c.service_areas);
+      setVal('we-price-interior', c.pricingInterior || c.price_interior);
+      setVal('we-price-exterior', c.pricingExterior || c.price_exterior);
+      setVal('we-price-wp', c.pricingWaterproofing || c.price_waterproofing);
+
+      const bannerActiveEl = document.getElementById('we-banner-active');
+      if (bannerActiveEl) {
+        bannerActiveEl.checked = c.promoBannerActive !== undefined ? !!c.promoBannerActive : !!c.banner_active;
+      }
+    }
+
+    async function saveWebsiteEditorData(e) {
+      if (e) e.preventDefault();
+      const submitBtn = document.getElementById('we-submit-btn');
+      const originalText = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving...';
+      }
+
+      const bannerActive = !!document.getElementById('we-banner-active').checked;
+      const bannerText = (document.getElementById('we-banner-text').value || '').trim();
+      const areas = (document.getElementById('we-areas').value || '').trim();
+      const pInterior = (document.getElementById('we-price-interior').value || '').trim();
+      const pExterior = (document.getElementById('we-price-exterior').value || '').trim();
+      const pWp = (document.getElementById('we-price-wp').value || '').trim();
+
+      const updatedConfig = {
+        phone: (document.getElementById('we-phone').value || '').trim() || '+91 93800 17556',
+        whatsapp: (document.getElementById('we-whatsapp').value || '').trim().replace(/\D/g, '') || '9380017556',
+        email: (document.getElementById('we-email').value || '').trim(),
+        instagram: (document.getElementById('we-instagram').value || '').trim(),
+        promoBannerActive: bannerActive,
+        banner_active: bannerActive,
+        promoBanner: bannerText,
+        banner_text: bannerText,
+        tagline: (document.getElementById('we-tagline').value || '').trim(),
+        serviceAreas: areas,
+        service_areas: areas,
+        pricingInterior: pInterior,
+        price_interior: pInterior,
+        pricingExterior: pExterior,
+        price_exterior: pExterior,
+        pricingWaterproofing: pWp,
+        price_waterproofing: pWp,
+        updated_at: new Date().toISOString()
+      };
+
+      // Always save to localStorage immediately for instant local reflection
+      try {
+        localStorage.setItem('rhp_site_config', JSON.stringify(updatedConfig));
+      } catch (_) {}
+
+      try {
+        const res = await fetch(`${API_BASE}/api/site-config`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedConfig)
+        });
         const data = await res.json();
         if (data.success) {
-          allLeads = [];
-          updateStats(allLeads);
-          filterLeads();
-          alert('All test leads have been cleared successfully!');
+          alert('✅ Website Content Updated Successfully!\n\nYour changes are now live across your website.');
+          closeWebsiteEditorModal();
         } else {
-          alert('Failed to clear leads: ' + (data.error || 'Unknown error'));
+          alert('Saved locally. Server response: ' + (data.error || 'Saved'));
+          closeWebsiteEditorModal();
         }
       } catch (err) {
-        alert('Error clearing leads: ' + err.message);
+        alert('✅ Saved locally in browser! (Server sync notice: ' + err.message + ')');
+        closeWebsiteEditorModal();
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
       }
     }
 

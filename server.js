@@ -4,7 +4,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const { insertLead, updateLeadEmailStatus, updateLeadSheetStatus, getAllLeads, deleteLead, deleteAllLeads } = require('./db/database');
+const { insertLead, updateLeadEmailStatus, updateLeadSheetStatus, getAllLeads, deleteLead, deleteAllLeads, getSiteConfig, saveSiteConfig } = require('./db/database');
 const { generateLeadExcel, generateAllLeadsExcel } = require('./services/excelService');
 const { sendLeadEmail } = require('./services/emailService');
 const { appendLeadToGoogleSheet } = require('./services/googleSheetService');
@@ -238,6 +238,26 @@ app.post('/api/leads/clear-all', async (req, res) => {
   try {
     const result = await deleteAllLeads();
     res.json({ success: true, message: `All leads cleared (${result.deleted} removed)` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get Website Configuration (Phone, WhatsApp, Announcement Banner, Service Areas, etc.)
+app.get('/api/site-config', (req, res) => {
+  try {
+    const config = getSiteConfig();
+    res.json({ success: true, config });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update Website Configuration from Web CRM Dashboard
+app.post('/api/site-config', (req, res) => {
+  try {
+    const updated = saveSiteConfig(req.body);
+    res.json({ success: true, message: 'Website settings updated successfully', config: updated });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

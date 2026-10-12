@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollReveals();
   initSmoothScroll();
   initSocialDeepLinks();
+  initDynamicSiteConfig();
 });
 
 /**
@@ -222,5 +223,114 @@ window.selectServiceOption = function(serviceName) {
     }
   }
 };
+
+/**
+ * Dynamic Website Configuration:
+ * Automatically applies phone, WhatsApp, announcement promo banner, tagline,
+ * and service area updates made from the CRM Web Dashboard.
+ */
+async function initDynamicSiteConfig() {
+  const isGithubPages = window.location.hostname.includes('github.io');
+  const isFileProtocol = window.location.protocol === 'file:';
+  const API_BASE = (isGithubPages || isFileProtocol) ? 'https://royal-home-painting.vercel.app' : '';
+
+  let config = null;
+
+  // 1. Instant reflection from localStorage if cached
+  try {
+    const cached = localStorage.getItem('rhp_site_config');
+    if (cached) {
+      config = JSON.parse(cached);
+      applySiteConfig(config);
+    }
+  } catch (_) {}
+
+  // 2. Fetch live settings from server
+  try {
+    const res = await fetch(`${API_BASE}/api/site-config`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.config) {
+        config = data.config;
+        try {
+          localStorage.setItem('rhp_site_config', JSON.stringify(config));
+        } catch (_) {}
+        applySiteConfig(config);
+      }
+    }
+  } catch (err) {
+    // If running offline or notice, cached config is already active
+  }
+}
+
+function applySiteConfig(c) {
+  if (!c) return;
+
+  // 1. Phone Number links and labels
+  if (c.phone) {
+    const cleanDigits = c.phone.replace(/\D/g, '');
+    const phoneHref = `tel:${c.phone.startsWith('+') ? c.phone.replace(/\s+/g, '') : `+91${cleanDigits}`}`;
+
+    document.querySelectorAll('a[href^="tel:"]').forEach(el => {
+      el.setAttribute('href', phoneHref);
+      // If inner text looks like a phone number, update displayed text
+      if (/\d{5}/.test(el.textContent)) {
+        if (el.classList.contains('header-phone-link')) {
+          el.innerHTML = `<span>📞</span> ${c.phone}`;
+        } else if (el.closest('.contact-card-item')) {
+          const valEl = el.querySelector('.contact-item-val');
+          if (valEl) valEl.textContent = c.phone;
+        } else if (el.textContent.includes('Phone:')) {
+          el.textContent = `Phone: ${c.phone}`;
+        }
+      }
+    });
+  }
+
+  // 2. WhatsApp Target Number
+  if (c.whatsapp) {
+    const cleanWa = c.whatsapp.replace(/\D/g, '');
+    const fullWa = cleanWa.length === 10 ? `91${cleanWa}` : cleanWa;
+
+    document.querySelectorAll('a[href*="wa.me"], a[href*="api.whatsapp.com"]').forEach(el => {
+      const currentHref = el.getAttribute('href');
+      if (currentHref) {
+        try {
+          const u = new URL(currentHref, window.location.href);
+          u.searchParams.set('phone', fullWa);
+          el.setAttribute('href', u.toString());
+        } catch (_) {}
+      }
+    });
+  }
+
+  // 3. Top Announcement & Promo Banner
+  const bannerEl = document.getElementById('site-promo-banner');
+  const bannerTextEl = document.getElementById('site-promo-banner-text');
+  const isBannerActive = c.promoBannerActive !== undefined ? c.promoBannerActive : c.banner_active;
+  const bannerText = c.promoBanner || c.banner_text;
+  if (bannerEl) {
+    if (isBannerActive && bannerText) {
+      bannerEl.style.display = 'block';
+      if (bannerTextEl) bannerTextEl.textContent = bannerText;
+    } else {
+      bannerEl.style.display = 'none';
+    }
+  }
+
+  // 4. Tagline & Subhead
+  if (c.tagline) {
+    const taglineEl = document.getElementById('hero-tagline');
+    if (taglineEl) taglineEl.textContent = c.tagline;
+  }
+
+  // 5. Operating Service Areas
+  const areasText = c.serviceAreas || c.service_areas;
+  if (areasText) {
+    const areasEl = document.getElementById('site-service-areas-text');
+    if (areasEl) areasEl.textContent = areasText;
+  }
+}
+
 
 
