@@ -4,11 +4,19 @@
   "email": "royalhomepainting11@gmail.com",
   "instagram": "https://www.instagram.com/royalhomepainting11/",
   "businessTitle": "Royal Home Painting",
-  "tagline": "Simple, Seamless, Satisfaction — Bangalore's Trusted House Painters Since 2018",
-  "promoBanner": "🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free On-Site Inspection in Bangalore!",
+  "tagline": "Simple, Seamless, Satisfaction — Bangalore Trusted House Painters Since 2018",
+  "promoBanner": "🎉 Flat 20% OFF Season Special on Painting & Waterproofing!",
   "promoBannerActive": true,
   "serviceAreas": "Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City, Bellandur, Marathahalli & all Bangalore",
   "pricingInterior": "₹12 / sq.ft",
   "pricingExterior": "₹15 / sq.ft",
-  "pricingWaterproofing": "₹28 / sq.ft"
+  "pricingWaterproofing": "₹28 / sq.ft",
+  "updated_at": "2026-10-12T15:12:46.011Z",
+  "banner_text": "🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free On-Site Inspection in Bangalore!",
+  "banner_active": true,
+  "service_areas": "Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City, Bellandur, Marathahalli & all Bangalore",
+  "price_exterior": "₹15 / sq.ft",
+  "price_interior": "₹12 / sq.ft",
+  "test_timestamp": 1791817839872,
+  "price_waterproofing": "₹28 / sq.ft"
 }

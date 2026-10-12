@@ -1752,9 +1752,14 @@
       }
     }
 
+    const SUPABASE_REST_URL = 'https://uthmtkuduoanjqwgqylh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0aG10a3VkdW9hbmpxd2dxeWxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTE3MzEsImV4cCI6MjEwNzM4NzczMX0.83eSiON4Zap9fosUMdzTW5wxYePG99EK-oPkNWipzJA';
+
     async function loadWebsiteEditorData() {
       try {
         let config = null;
+
+        // 1. Primary: Try current server endpoint
         try {
           const res = await fetch(`${API_BASE}/api/site-config`);
           if (res.ok) {
@@ -1763,29 +1768,68 @@
           }
         } catch (_) {}
 
+        // 2. If running locally or on preview, fallback to live Vercel endpoint
+        if (!config && !API_BASE.includes('royal-home-painting.vercel.app')) {
+          try {
+            const res = await fetch('https://royal-home-painting.vercel.app/api/site-config');
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success && data.config) config = data.config;
+            }
+          } catch (_) {}
+        }
+
+        // 3. Fallback: Direct Supabase Cloud PostgreSQL query
+        if (!config) {
+          try {
+            const supaRes = await fetch(`${SUPABASE_REST_URL}/rest/v1/site_config?id=eq.current&select=*`, {
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+              }
+            });
+            if (supaRes.ok) {
+              const rows = await supaRes.json();
+              if (Array.isArray(rows) && rows.length > 0 && rows[0].data) {
+                config = rows[0].data;
+              }
+            }
+          } catch (_) {}
+        }
+
+        // 4. Fallback: Local browser cache
         if (!config) {
           const cached = localStorage.getItem('rhp_site_config');
           if (cached) config = JSON.parse(cached);
         }
 
+        // 5. Hardcoded baseline defaults matching Royal Home Painting Bangalore
         if (!config) {
-          // Defaults matching Royal Home Painting Bangalore
           config = {
             phone: '+91 93800 17556',
             whatsapp: '9380017556',
             email: 'royalhomepainting11@gmail.com',
             instagram: 'https://www.instagram.com/royalhomepainting11/',
             banner_active: true,
-            banner_text: '🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free Inspection!',
+            promoBannerActive: true,
+            banner_text: '🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free On-Site Inspection in Bangalore!',
+            promoBanner: '🎉 Special Offer: Flat 15% OFF on Interior & Exterior Painting + Free On-Site Inspection in Bangalore!',
             tagline: 'Simple, Seamless, Satisfaction — Bangalore\'s Trusted House Painters Since 2018',
             service_areas: 'Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City & across Bangalore',
+            serviceAreas: 'Indiranagar, HSR Layout, Koramangala, Whitefield, Jayanagar, Electronic City & across Bangalore',
             price_interior: '₹12 / sq.ft',
+            pricingInterior: '₹12 / sq.ft',
             price_exterior: '₹15 / sq.ft',
-            price_waterproofing: '₹28 / sq.ft'
+            pricingExterior: '₹15 / sq.ft',
+            price_waterproofing: '₹28 / sq.ft',
+            pricingWaterproofing: '₹28 / sq.ft'
           };
         }
 
         currentSiteConfig = config;
+        try {
+          localStorage.setItem('rhp_site_config', JSON.stringify(config));
+        } catch (_) {}
         populateWebsiteEditorForm(config);
       } catch (err) {
         console.warn('Error loading site config:', err);
@@ -1821,7 +1865,7 @@
       const originalText = submitBtn ? submitBtn.innerHTML : '';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '⏳ Saving...';
+        submitBtn.innerHTML = '⏳ Saving to Live Cloud...';
       }
 
       const bannerActive = !!document.getElementById('we-banner-active').checked;
@@ -1852,33 +1896,76 @@
         updated_at: new Date().toISOString()
       };
 
-      // Always save to localStorage immediately for instant local reflection
+      // 1. Immediately cache locally
       try {
         localStorage.setItem('rhp_site_config', JSON.stringify(updatedConfig));
       } catch (_) {}
 
+      let savedServer = false;
+
+      // 2. Save via server endpoint
       try {
         const res = await fetch(`${API_BASE}/api/site-config`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedConfig)
         });
-        const data = await res.json();
-        if (data.success) {
-          alert('✅ Website Content Updated Successfully!\n\nYour changes are now live across your website.');
-          closeWebsiteEditorModal();
-        } else {
-          alert('Saved locally. Server response: ' + (data.error || 'Saved'));
-          closeWebsiteEditorModal();
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) savedServer = true;
         }
-      } catch (err) {
-        alert('✅ Saved locally in browser! (Server sync notice: ' + err.message + ')');
-        closeWebsiteEditorModal();
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalText;
+      } catch (_) {}
+
+      // 3. Fallback to live Vercel backend if local failed
+      if (!savedServer && !API_BASE.includes('royal-home-painting.vercel.app')) {
+        try {
+          const res = await fetch('https://royal-home-painting.vercel.app/api/site-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedConfig)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) savedServer = true;
+          }
+        } catch (_) {}
+      }
+
+      // 4. Supabase Cloud PostgreSQL direct sync (guarantees persistence across cold lambdas)
+      try {
+        const supaRes = await fetch(`${SUPABASE_REST_URL}/rest/v1/site_config`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            id: 'current',
+            data: updatedConfig,
+            updated_at: new Date().toISOString()
+          })
+        });
+        if (supaRes.ok) {
+          savedServer = true;
         }
+      } catch (supaErr) {
+        console.warn('Supabase direct sync notice:', supaErr);
+      }
+
+      currentSiteConfig = updatedConfig;
+
+      if (savedServer) {
+        alert('✅ Website Content Saved & Published Successfully!\n\nYour changes are now live across Royal Home Painting.');
+      } else {
+        alert('✅ Settings saved in browser cache.');
+      }
+      closeWebsiteEditorModal();
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
       }
     }
 

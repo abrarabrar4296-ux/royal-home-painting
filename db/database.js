@@ -50,41 +50,75 @@ function getDefaultSiteConfig() {
   };
 }
 
-function getSiteConfig() {
+async function getSiteConfig() {
+  // 1. Primary: Fetch persisted configuration from Supabase Cloud PostgreSQL
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config?id=eq.current&select=*`, {
+      headers: supabaseHeaders()
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0 && rows[0].data) {
+        memorySiteConfig = Object.assign(getDefaultSiteConfig(), rows[0].data);
+        return memorySiteConfig;
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Supabase site_config fetch notice:', err.message);
+  }
+
+  // 2. Fallback: In-memory or local cached file
   if (memorySiteConfig) return memorySiteConfig;
   try {
     if (fs.existsSync(writableConfigPath)) {
-      memorySiteConfig = JSON.parse(fs.readFileSync(writableConfigPath, 'utf8'));
+      memorySiteConfig = Object.assign(getDefaultSiteConfig(), JSON.parse(fs.readFileSync(writableConfigPath, 'utf8')));
       return memorySiteConfig;
     }
     if (fs.existsSync(bundledConfigPath)) {
-      memorySiteConfig = JSON.parse(fs.readFileSync(bundledConfigPath, 'utf8'));
+      memorySiteConfig = Object.assign(getDefaultSiteConfig(), JSON.parse(fs.readFileSync(bundledConfigPath, 'utf8')));
       return memorySiteConfig;
     }
   } catch (_) {}
+
+  // 3. Fallback: Default Royal Home Painting settings
   memorySiteConfig = getDefaultSiteConfig();
   return memorySiteConfig;
 }
 
-function saveSiteConfig(newConfig) {
-  memorySiteConfig = Object.assign({}, getSiteConfig(), newConfig);
+async function saveSiteConfig(newConfig) {
+  const current = await getSiteConfig();
+  const merged = Object.assign({}, current, newConfig, { updated_at: new Date().toISOString() });
+  memorySiteConfig = merged;
+
+  // Persist to local disk where possible
   try {
-    fs.writeFileSync(writableConfigPath, JSON.stringify(memorySiteConfig, null, 2), 'utf8');
+    fs.writeFileSync(writableConfigPath, JSON.stringify(merged, null, 2), 'utf8');
   } catch (_) {}
   try {
-    fs.writeFileSync(bundledConfigPath, JSON.stringify(memorySiteConfig, null, 2), 'utf8');
+    fs.writeFileSync(bundledConfigPath, JSON.stringify(merged, null, 2), 'utf8');
   } catch (_) {}
 
-  // Async sync to Supabase in background
+  // Persist directly to Supabase Cloud PostgreSQL and await confirmation
   try {
-    fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
       method: 'POST',
-      headers: supabaseHeaders({ 'Prefer': 'resolution=merge-duplicates' }),
-      body: JSON.stringify({ id: 'current', data: memorySiteConfig, updated_at: new Date().toISOString() })
-    }).catch(() => {});
-  } catch (_) {}
+      headers: supabaseHeaders({
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      }),
+      body: JSON.stringify({
+        id: 'current',
+        data: merged,
+        updated_at: new Date().toISOString()
+      })
+    });
+    if (!res.ok) {
+      console.warn('⚠️ Supabase site_config save status:', res.status, await res.text());
+    }
+  } catch (err) {
+    console.warn('⚠️ Supabase site_config save notice:', err.message);
+  }
 
-  return memorySiteConfig;
+  return merged;
 }
 
 let sqlite3, db;

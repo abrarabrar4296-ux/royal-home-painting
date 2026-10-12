@@ -256,11 +256,48 @@ async function initDynamicSiteConfig() {
           localStorage.setItem('rhp_site_config', JSON.stringify(config));
         } catch (_) {}
         applySiteConfig(config);
+        return;
       }
     }
-  } catch (err) {
-    // If running offline or notice, cached config is already active
+  } catch (err) {}
+
+  // 3. Fallback to live Vercel backend if local/preview failed
+  if (!API_BASE.includes('royal-home-painting.vercel.app')) {
+    try {
+      const res = await fetch('https://royal-home-painting.vercel.app/api/site-config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.config) {
+          config = data.config;
+          try {
+            localStorage.setItem('rhp_site_config', JSON.stringify(config));
+          } catch (_) {}
+          applySiteConfig(config);
+          return;
+        }
+      }
+    } catch (_) {}
   }
+
+  // 4. Fallback to Supabase Cloud PostgreSQL directly
+  try {
+    const res = await fetch('https://uthmtkuduoanjqwgqylh.supabase.co/rest/v1/site_config?id=eq.current&select=*', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0aG10a3VkdW9hbmpxd2dxeWxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTE3MzEsImV4cCI6MjEwNzM4NzczMX0.83eSiON4Zap9fosUMdzTW5wxYePG99EK-oPkNWipzJA',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0aG10a3VkdW9hbmpxd2dxeWxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTE3MzEsImV4cCI6MjEwNzM4NzczMX0.83eSiON4Zap9fosUMdzTW5wxYePG99EK-oPkNWipzJA'
+      }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0 && rows[0].data) {
+        config = rows[0].data;
+        try {
+          localStorage.setItem('rhp_site_config', JSON.stringify(config));
+        } catch (_) {}
+        applySiteConfig(config);
+      }
+    }
+  } catch (_) {}
 }
 
 function applySiteConfig(c) {

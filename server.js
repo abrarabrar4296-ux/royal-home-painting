@@ -244,9 +244,9 @@ app.post('/api/leads/clear-all', async (req, res) => {
 });
 
 // Get Website Configuration (Phone, WhatsApp, Announcement Banner, Service Areas, etc.)
-app.get('/api/site-config', (req, res) => {
+app.get('/api/site-config', async (req, res) => {
   try {
-    const config = getSiteConfig();
+    const config = await getSiteConfig();
     res.json({ success: true, config });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -254,9 +254,9 @@ app.get('/api/site-config', (req, res) => {
 });
 
 // Update Website Configuration from Web CRM Dashboard
-app.post('/api/site-config', (req, res) => {
+app.post('/api/site-config', async (req, res) => {
   try {
-    const updated = saveSiteConfig(req.body);
+    const updated = await saveSiteConfig(req.body);
     res.json({ success: true, message: 'Website settings updated successfully', config: updated });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
