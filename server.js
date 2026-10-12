@@ -22,6 +22,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Also serve generated exports if needed for download
 app.use('/exports', express.static(path.join(__dirname, 'exports')));
 
+// Dynamic serving of dashboard with anti-cache headers
+app.get(['/leads', '/leads.html', '/dashboard', '/admin'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'public', 'leads.html'));
+});
+
 // Rate Limiting for Lead Submissions (Spam protection)
 const leadRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

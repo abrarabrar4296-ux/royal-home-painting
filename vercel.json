@@ -7,15 +7,19 @@
     },
     {
       "source": "/leads",
-      "destination": "/leads.html"
+      "destination": "/api"
+    },
+    {
+      "source": "/leads.html",
+      "destination": "/api"
     },
     {
       "source": "/dashboard",
-      "destination": "/leads.html"
+      "destination": "/api"
     },
     {
       "source": "/admin",
-      "destination": "/leads.html"
+      "destination": "/api"
     },
     {
       "source": "/(.*)",
