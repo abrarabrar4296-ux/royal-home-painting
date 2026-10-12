@@ -6,16 +6,23 @@ const isVercel = !!process.env.VERCEL;
 
 // Resilient in-memory / file fallback store for serverless environments (e.g. Vercel)
 let memoryLeads = [];
-const fallbackFilePath = path.join(
+const bundledFallbackPath = path.join(__dirname, '..', 'data', 'leads_fallback.json');
+const writableFallbackPath = path.join(
   process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : path.join(__dirname, '..', 'data'),
   'leads_fallback.json'
 );
 
 function loadFallbackLeads() {
   try {
-    if (fs.existsSync(fallbackFilePath)) {
-      const data = fs.readFileSync(fallbackFilePath, 'utf8');
+    if (fs.existsSync(writableFallbackPath)) {
+      const data = fs.readFileSync(writableFallbackPath, 'utf8');
       memoryLeads = JSON.parse(data);
+    } else if (fs.existsSync(bundledFallbackPath)) {
+      const data = fs.readFileSync(bundledFallbackPath, 'utf8');
+      memoryLeads = JSON.parse(data);
+      try {
+        fs.writeFileSync(writableFallbackPath, JSON.stringify(memoryLeads, null, 2), 'utf8');
+      } catch (_) {}
     }
   } catch (e) {
     // In-memory array will be used
@@ -24,7 +31,7 @@ function loadFallbackLeads() {
 
 function saveFallbackLeads() {
   try {
-    fs.writeFileSync(fallbackFilePath, JSON.stringify(memoryLeads, null, 2), 'utf8');
+    fs.writeFileSync(writableFallbackPath, JSON.stringify(memoryLeads, null, 2), 'utf8');
   } catch (e) {
     // Non-fatal if filesystem is read-only
   }

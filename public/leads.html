@@ -907,7 +907,25 @@
     let tabTitleInterval = null;
     const originalDocumentTitle = document.title;
 
+    const isGithubPages = window.location.hostname.includes('github.io');
+    const isFileProtocol = window.location.protocol === 'file:';
+    const API_BASE = (isGithubPages || isFileProtocol) ? 'https://royal-home-painting.vercel.app' : '';
+
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Instant local cache restore so user sees leads immediately without waiting
+      try {
+        const cached = localStorage.getItem('rhp_cached_leads');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            allLeads = parsed;
+            parsed.forEach(l => knownLeadIds.add(l.id));
+            updateStats(allLeads);
+            filterLeads();
+          }
+        }
+      } catch (_) {}
+
       initNotificationEngine();
       loadLeads();
       connectSSE();
@@ -921,21 +939,13 @@
         localhostAlert.style.display = 'block';
       }
 
-      const isGithubPages = window.location.hostname.includes('github.io');
-      const API_BASE = isGithubPages ? 'https://royal-home-painting.vercel.app' : '';
-
-      // Set formula URL in modal (uses active Cloudflare tunnel on localhost)
+      // Set formula URL in modal (uses reliable live Vercel endpoint)
       const formulaEl = document.getElementById('formula-box');
       if (formulaEl) {
-        const tunnelBase = isLocalhost 
-          ? 'https://restoration-identifier-riders-mass.trycloudflare.com' 
-          : (isGithubPages ? 'https://royal-home-painting.vercel.app' : window.location.origin);
-        formulaEl.textContent = `=IMPORTDATA("${tunnelBase}/api/leads.csv")`;
+        const liveFormulaUrl = 'https://royal-home-painting.vercel.app/api/leads.csv';
+        formulaEl.textContent = `=IMPORTDATA("${liveFormulaUrl}")`;
       }
     });
-
-    const isGithubPages = window.location.hostname.includes('github.io');
-    const API_BASE = isGithubPages ? 'https://royal-home-painting.vercel.app' : '';
 
     /* =========================================================
        NOTIFICATION & AUDIO ALERT ENGINE
@@ -1369,12 +1379,42 @@
 
     async function loadLeads() {
       try {
-        const response = await fetch(`${API_BASE}/api/leads`);
+        let response;
+        try {
+          response = await fetch(`${API_BASE}/api/leads`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        } catch (fetchErr) {
+          // If primary/local request fails and we're not already hitting Vercel, fallback to live Vercel endpoint
+          if (!API_BASE.includes('royal-home-painting.vercel.app')) {
+            response = await fetch('https://royal-home-painting.vercel.app/api/leads');
+          } else {
+            throw fetchErr;
+          }
+        }
+
         const data = await response.json();
         
         if (data.success) {
-          const incomingLeads = data.leads || [];
+          let incomingLeads = data.leads || [];
           
+          // If server returned leads, persist to localStorage for offline / instant reload
+          if (incomingLeads.length > 0) {
+            try {
+              localStorage.setItem('rhp_cached_leads', JSON.stringify(incomingLeads));
+            } catch (_) {}
+          } else {
+            // If server returned 0 leads (e.g. cold server), fall back to cached leads in localStorage
+            try {
+              const cached = localStorage.getItem('rhp_cached_leads');
+              if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  incomingLeads = parsed;
+                }
+              }
+            } catch (_) {}
+          }
+
           if (isInitialLoad) {
             incomingLeads.forEach(l => knownLeadIds.add(l.id));
             isInitialLoad = false;
@@ -1391,10 +1431,25 @@
           allLeads = incomingLeads;
           updateStats(allLeads);
           filterLeads();
-          document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-IN');
+          const lastUpdatedEl = document.getElementById('last-updated');
+          if (lastUpdatedEl) {
+            lastUpdatedEl.textContent = new Date().toLocaleTimeString('en-IN');
+          }
         }
       } catch (err) {
-        console.error('Failed to load leads:', err);
+        console.warn('Notice loading live leads:', err.message);
+        // On error, ensure cached leads are displayed
+        try {
+          const cached = localStorage.getItem('rhp_cached_leads');
+          if (cached && allLeads.length === 0) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              allLeads = parsed;
+              updateStats(allLeads);
+              filterLeads();
+            }
+          }
+        } catch (_) {}
       }
     }
 

@@ -1,0 +1,110 @@
+[
+  {
+    "id": 17,
+    "name": "Abrar Abrar",
+    "phone": "+91 91486 60106",
+    "area": "HSR Layout",
+    "service": "House Painting",
+    "notes": "Website inquiry",
+    "created_at": "2026-10-12 19:13:33",
+    "email_status": "logged_no_smtp",
+    "excel_filename": null,
+    "sheet_status": "logged_no_webhook"
+  },
+  {
+    "id": 16,
+    "name": "Rohan Verma",
+    "phone": "9876543210",
+    "area": "Koramangala 4th Block",
+    "service": "House Painting",
+    "notes": "Need 2 coats interior painting for 2BHK.",
+    "created_at": "2026-09-21 01:22:40",
+    "email_status": "logged_no_smtp",
+    "excel_filename": "Lead_16_Rohan_Verma_2026-09-20T19-52-40.xlsx",
+    "sheet_status": "logged_no_webhook"
+  },
+  {
+    "id": 15,
+    "name": "Anand Sharma",
+    "phone": "+91 98450 12345",
+    "area": "Indiranagar 100ft Road",
+    "service": "House Painting",
+    "notes": "Need full 3BHK interior repainting and water seepage check in kitchen.",
+    "created_at": "2026-09-21 01:22:16",
+    "email_status": "pending",
+    "excel_filename": null,
+    "sheet_status": "pending"
+  },
+  {
+    "id": 14,
+    "name": "Anand Sharma",
+    "phone": "+91 98450 12345",
+    "area": "Indiranagar 100ft Road",
+    "service": "House Painting",
+    "notes": "Need full 3BHK interior repainting and water seepage check in kitchen.",
+    "created_at": "2026-09-21 01:21:50",
+    "email_status": "pending",
+    "excel_filename": null,
+    "sheet_status": "pending"
+  },
+  {
+    "id": 13,
+    "name": "Priya Sundaram",
+    "phone": "+919876543210",
+    "area": "Koramangala 4th Block",
+    "service": "House Painting",
+    "notes": "Testing real-time notification broadcast.",
+    "created_at": "2026-09-21 00:17:24",
+    "email_status": "logged_no_smtp",
+    "excel_filename": "Lead_13_Priya_Sundaram_2026-09-20T18-47-24.xlsx",
+    "sheet_status": "logged_no_webhook"
+  },
+  {
+    "id": 12,
+    "name": "Priya Narayanan",
+    "phone": "9845198765",
+    "area": "Koramangala 4th Block",
+    "service": "Both (Painting & Waterproofing)",
+    "notes": "Terrace is leaking into top-floor bedrooms and exterior paint needs fresh coat.",
+    "created_at": "2026-09-20 23:45:25",
+    "email_status": "logged_no_smtp",
+    "excel_filename": "Lead_12_Priya_Narayanan_2026-09-20T18-15-25.xlsx",
+    "sheet_status": "logged_no_webhook"
+  },
+  {
+    "id": 11,
+    "name": "Priya Sundaram",
+    "phone": "+919876543210",
+    "area": "Koramangala 4th Block",
+    "service": "House Painting",
+    "notes": "Testing real-time notification broadcast.",
+    "created_at": "2026-09-20 23:44:49",
+    "email_status": "logged_no_smtp",
+    "excel_filename": "Lead_11_Priya_Sundaram_2026-09-20T18-14-49.xlsx",
+    "sheet_status": "logged_no_webhook"
+  },
+  {
+    "id": 10,
+    "name": "Anand Sharma",
+    "phone": "+91 98450 12345",
+    "area": "Indiranagar 100ft Road",
+    "service": "House Painting",
+    "notes": "Need full 3BHK interior repainting and water seepage check in kitchen.",
+    "created_at": "2026-09-20 23:44:29",
+    "email_status": "pending",
+    "excel_filename": null,
+    "sheet_status": "pending"
+  },
+  {
+    "id": 9,
+    "name": "ab",
+    "phone": "4125698312",
+    "area": "hsr layout",
+    "service": "Terrace Waterproofing",
+    "notes": "",
+    "created_at": "2026-09-18 08:46:00",
+    "email_status": "logged_no_smtp",
+    "excel_filename": "Lead_9_ab_2026-09-18T03-16-00.xlsx",
+    "sheet_status": "logged_no_webhook"
+  }
+]
