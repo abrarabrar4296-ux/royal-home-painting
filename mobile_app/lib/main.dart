@@ -415,7 +415,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                   if (seg.isNotEmpty) phone = seg.last;
                 }
                 final text = parsed.queryParameters['text'] ?? '';
-                final cleanPhone = (phone ?? '919740318779').replaceAll(RegExp(r'\D'), '');
+                final cleanPhone = (phone ?? '919380017556').replaceAll(RegExp(r'\D'), '');
                 final nativeAppUri = Uri.parse(
                   'whatsapp://send?phone=$cleanPhone&text=${Uri.encodeComponent(text)}',
                 );

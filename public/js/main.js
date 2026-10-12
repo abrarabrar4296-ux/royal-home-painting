@@ -29,7 +29,7 @@ function initSocialDeepLinks() {
     e.preventDefault();
 
     let text = '';
-    let phone = '919740318779';
+    let phone = '919380017556';
 
     try {
       const urlObj = new URL(href, window.location.href);

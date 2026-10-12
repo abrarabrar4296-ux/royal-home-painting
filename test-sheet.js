@@ -10,7 +10,7 @@ async function testGoogleSheetIntegration() {
   const testLead1 = {
     id: 991,
     name: 'Kavitha Swaminathan',
-    phone: '+91 97403 18779',
+    phone: '+91 93800 17556',
     area: 'HSR Layout Sector 1',
     service: 'House Painting',
     notes: 'Testing Google Sheet fallback'

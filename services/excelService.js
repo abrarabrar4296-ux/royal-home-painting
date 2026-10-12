@@ -129,7 +129,7 @@ async function generateLeadExcel(lead) {
   // Footer note
   worksheet.mergeCells(`B${currentRowIndex + 1}:C${currentRowIndex + 1}`);
   const footerCell = worksheet.getCell(`B${currentRowIndex + 1}`);
-  footerCell.value = 'Contact Customer: Phone / WhatsApp: +91 97403 18779 | Email: royalhomepainting11@gmail.com';
+  footerCell.value = 'Contact Customer: Phone / WhatsApp: +91 93800 17556 | Email: royalhomepainting11@gmail.com';
   footerCell.font = { name: 'Arial', size: 8.5, color: { argb: 'FF666666' } };
   footerCell.alignment = { vertical: 'middle', horizontal: 'center' };
   worksheet.getRow(currentRowIndex + 1).height = 22;

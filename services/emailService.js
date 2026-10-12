@@ -118,7 +118,7 @@ async function sendLeadEmail(lead, excelData) {
           </p>
         </div>
         <div class="footer">
-          Royal Home Painting Lead Engine &bull; Founded 2018 &bull; +91 97403 18779
+          Royal Home Painting Lead Engine &bull; Founded 2018 &bull; +91 93800 17556
         </div>
       </div>
     </body>

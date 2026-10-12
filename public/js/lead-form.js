@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = `Hi Royal Home Painting! I just submitted a quote request for ${service} in ${area || 'Bangalore'}. My name is ${name}.`;
         const waUrl = (data.whatsappUrl && data.whatsappUrl.includes('api.whatsapp.com'))
           ? data.whatsappUrl
-          : `https://api.whatsapp.com/send?phone=919740318779&text=${encodeURIComponent(msg)}`;
+          : `https://api.whatsapp.com/send?phone=919380017556&text=${encodeURIComponent(msg)}`;
         modalWhatsAppLink.href = waUrl;
       }
 
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error('Lead submission error:', err);
-      showError(err.message || 'Something went wrong while sending your request. Please call or WhatsApp us directly at +91 97403 18779.');
+      showError(err.message || 'Something went wrong while sending your request. Please call or WhatsApp us directly at +91 93800 17556.');
     } finally {
       setLoading(false);
     }

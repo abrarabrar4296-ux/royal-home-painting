@@ -3,7 +3,7 @@
 > **Tagline**: *"Simple, Seamless, Satisfaction"*  
 > **Founded**: 2018 | Bangalore, Karnataka, India  
 > **Services**: House Painting (Interior & Exterior) & Terrace / Roof Waterproofing  
-> **Contact**: Phone/WhatsApp: +91 97403 18779 | Email: royalhomepainting11@gmail.com  
+> **Contact**: Phone/WhatsApp: +91 93800 17556 | Email: royalhomepainting11@gmail.com  
 
 ---
 

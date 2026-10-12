@@ -30,7 +30,7 @@ const leadRateLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    error: 'Too many requests from this network. Please wait a few minutes or call/WhatsApp us directly at +91 97403 18779.'
+    error: 'Too many requests from this network. Please wait a few minutes or call/WhatsApp us directly at +91 93800 17556.'
   }
 });
 
@@ -167,7 +167,7 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
     const prefilledText = encodeURIComponent(
       `Hi Royal Home Painting! I just submitted a quote request for ${savedLead.service} in ${savedLead.area || 'Bangalore'}. My name is ${savedLead.name}.`
     );
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=919740318779&text=${prefilledText}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=919380017556&text=${prefilledText}`;
 
     // 8. Return success response
     return res.status(201).json({
@@ -184,7 +184,7 @@ app.post('/api/leads', leadRateLimiter, async (req, res) => {
     console.error('❌ Error processing lead submission:', error);
     return res.status(500).json({
       success: false,
-      error: 'An unexpected error occurred while saving your request. Please call or WhatsApp us at +91 97403 18779.'
+      error: 'An unexpected error occurred while saving your request. Please call or WhatsApp us at +91 93800 17556.'
     });
   }
 });
@@ -310,7 +310,7 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log('====================================================');
     console.log(`🎨 Royal Home Painting Server running on http://localhost:${PORT}`);
-    console.log(`📍 City: Bangalore, India | Tel: +91 97403 18779`);
+    console.log(`📍 City: Bangalore, India | Tel: +91 93800 17556`);
     console.log(`🛡️  Honeypot anti-spam & rate limiter active on /api/leads`);
     console.log('====================================================\n');
   });

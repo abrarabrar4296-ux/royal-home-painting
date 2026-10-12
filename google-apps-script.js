@@ -108,7 +108,7 @@ function testLeadRow() {
         id: 999,
         timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
         name: "Test Customer",
-        phone: "+91 97403 18779",
+        phone: "+91 93800 17556",
         area: "Indiranagar, Bangalore",
         service: "House Painting & Waterproofing",
         notes: "Test inquiry from Royal Home Painting script",
