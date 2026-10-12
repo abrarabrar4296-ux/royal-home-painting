@@ -4,70 +4,25 @@ const fs = require('fs');
 const isNetlify = !!process.env.NETLIFY;
 const isVercel = !!process.env.VERCEL;
 
-// Resilient in-memory / file fallback store for serverless environments (e.g. Vercel)
+// Supabase Cloud PostgreSQL Data Layer (Active & Shared across all Vercel instances)
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uthmtkuduoanjqwgqylh.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0aG10a3VkdW9hbmpxd2dxeWxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTE3MzEsImV4cCI6MjEwNzM4NzczMX0.83eSiON4Zap9fosUMdzTW5wxYePG99EK-oPkNWipzJA';
+
+function supabaseHeaders(extra = {}) {
+  return Object.assign({
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json'
+  }, extra);
+}
+
+// In-memory fallback store
 let memoryLeads = [];
 const bundledFallbackPath = path.join(__dirname, '..', 'data', 'leads_fallback.json');
 const writableFallbackPath = path.join(
   process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : path.join(__dirname, '..', 'data'),
   'leads_fallback.json'
 );
-
-// Persistent deleted leads tracking so deleted leads NEVER re-appear
-let deletedLeadIds = new Set();
-const deletedIdsFilePath = path.join(
-  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? '/tmp' : path.join(__dirname, '..', 'data'),
-  'deleted_lead_ids.json'
-);
-
-function loadDeletedIds() {
-  try {
-    if (fs.existsSync(deletedIdsFilePath)) {
-      const data = JSON.parse(fs.readFileSync(deletedIdsFilePath, 'utf8'));
-      if (Array.isArray(data)) {
-        deletedLeadIds = new Set(data.map(String));
-      }
-    }
-  } catch (_) {}
-}
-
-function saveDeletedIds() {
-  try {
-    fs.writeFileSync(deletedIdsFilePath, JSON.stringify([...deletedLeadIds]), 'utf8');
-  } catch (_) {}
-}
-
-loadDeletedIds();
-
-function loadFallbackLeads() {
-  try {
-    if (fs.existsSync(writableFallbackPath)) {
-      const data = fs.readFileSync(writableFallbackPath, 'utf8');
-      memoryLeads = JSON.parse(data);
-    } else if (fs.existsSync(bundledFallbackPath)) {
-      const data = fs.readFileSync(bundledFallbackPath, 'utf8');
-      memoryLeads = JSON.parse(data);
-      try {
-        fs.writeFileSync(writableFallbackPath, JSON.stringify(memoryLeads, null, 2), 'utf8');
-      } catch (_) {}
-    }
-    // Filter out any previously deleted leads
-    if (Array.isArray(memoryLeads)) {
-      memoryLeads = memoryLeads.filter(l => !deletedLeadIds.has(String(l.id)));
-    }
-  } catch (e) {
-    // In-memory array will be used
-  }
-}
-
-function saveFallbackLeads() {
-  try {
-    fs.writeFileSync(writableFallbackPath, JSON.stringify(memoryLeads, null, 2), 'utf8');
-  } catch (e) {
-    // Non-fatal if filesystem is read-only
-  }
-}
-
-loadFallbackLeads();
 
 // Dynamic Site Configuration Storage
 const bundledConfigPath = path.join(__dirname, '..', 'data', 'site_config.json');
@@ -78,20 +33,8 @@ const writableConfigPath = path.join(
 
 let memorySiteConfig = null;
 
-function getSiteConfig() {
-  if (memorySiteConfig) return memorySiteConfig;
-  try {
-    if (fs.existsSync(writableConfigPath)) {
-      memorySiteConfig = JSON.parse(fs.readFileSync(writableConfigPath, 'utf8'));
-      return memorySiteConfig;
-    }
-    if (fs.existsSync(bundledConfigPath)) {
-      memorySiteConfig = JSON.parse(fs.readFileSync(bundledConfigPath, 'utf8'));
-      return memorySiteConfig;
-    }
-  } catch (_) {}
-  
-  memorySiteConfig = {
+function getDefaultSiteConfig() {
+  return {
     phone: "+91 93800 17556",
     whatsapp: "919380017556",
     email: "royalhomepainting11@gmail.com",
@@ -105,6 +48,21 @@ function getSiteConfig() {
     pricingExterior: "₹15 / sq.ft",
     pricingWaterproofing: "₹28 / sq.ft"
   };
+}
+
+function getSiteConfig() {
+  if (memorySiteConfig) return memorySiteConfig;
+  try {
+    if (fs.existsSync(writableConfigPath)) {
+      memorySiteConfig = JSON.parse(fs.readFileSync(writableConfigPath, 'utf8'));
+      return memorySiteConfig;
+    }
+    if (fs.existsSync(bundledConfigPath)) {
+      memorySiteConfig = JSON.parse(fs.readFileSync(bundledConfigPath, 'utf8'));
+      return memorySiteConfig;
+    }
+  } catch (_) {}
+  memorySiteConfig = getDefaultSiteConfig();
   return memorySiteConfig;
 }
 
@@ -116,6 +74,16 @@ function saveSiteConfig(newConfig) {
   try {
     fs.writeFileSync(bundledConfigPath, JSON.stringify(memorySiteConfig, null, 2), 'utf8');
   } catch (_) {}
+
+  // Async sync to Supabase in background
+  try {
+    fetch(`${SUPABASE_URL}/rest/v1/site_config`, {
+      method: 'POST',
+      headers: supabaseHeaders({ 'Prefer': 'resolution=merge-duplicates' }),
+      body: JSON.stringify({ id: 'current', data: memorySiteConfig, updated_at: new Date().toISOString() })
+    }).catch(() => {});
+  } catch (_) {}
+
   return memorySiteConfig;
 }
 
@@ -126,20 +94,13 @@ if (!isNetlify && !isVercel) {
   try {
     sqlite3 = require('sqlite3').verbose();
     const dbDir = path.join(__dirname, '..', 'data');
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
-
+    if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
     const dbPath = path.join(dbDir, 'leads.db');
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
-        console.warn('⚠️ SQLite connect failed, using resilient fallback store:', err.message);
         useFallback = true;
-      } else {
-        console.log('✅ Connected to SQLite database at:', dbPath);
       }
     });
-
     if (db) {
       db.serialize(() => {
         db.run(`
@@ -156,83 +117,57 @@ if (!isNetlify && !isVercel) {
             excel_filename TEXT
           )
         `);
-
-        db.all(`PRAGMA table_info(leads)`, (err, columns) => {
-          if (!err && columns && !columns.some(col => col.name === 'sheet_status')) {
-            db.run(`ALTER TABLE leads ADD COLUMN sheet_status TEXT DEFAULT 'pending'`);
-          }
-        });
       });
     }
   } catch (err) {
-    console.warn('⚠️ SQLite init skipped (serverless environment):', err.message);
     useFallback = true;
   }
 }
 
 /**
- * Helper to get Netlify Blobs storage store
- */
-function getNetlifyStore() {
-  const { getStore } = require('@netlify/blobs');
-  return getStore('leads-store');
-}
-
-/**
- * Save a new lead (supports Netlify Blobs, SQLite, or Serverless Fallback)
- * @param {Object} lead - { name, phone, area, service, notes }
- * @returns {Promise<Object>} Inserted lead with id
+ * Save a new lead (Primary: Supabase Cloud PostgreSQL; Fallback: SQLite/Memory)
  */
 async function insertLead(lead) {
-  if (isNetlify) {
-    try {
-      const store = getNetlifyStore();
-      const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      const maxExisting = leads.length > 0 ? Math.max(...leads.map(l => Number(l.id) || 0)) : 1000;
-      const nextId = Math.max(maxExisting + 1, 1001);
-      deletedLeadIds.delete(String(nextId));
-      saveDeletedIds();
+  const leadPayload = {
+    name: lead.name.trim(),
+    phone: lead.phone.trim(),
+    area: lead.area ? lead.area.trim() : 'Bangalore',
+    service: lead.service ? lead.service.trim() : 'House Painting',
+    notes: lead.notes ? lead.notes.trim() : '',
+    email_status: 'pending',
+    sheet_status: 'pending'
+  };
 
-      const newLead = {
-        id: nextId,
-        name: lead.name.trim(),
-        phone: lead.phone.trim(),
-        area: lead.area ? lead.area.trim() : 'Bangalore',
-        service: lead.service ? lead.service.trim() : 'House Painting',
-        notes: lead.notes ? lead.notes.trim() : '',
-        created_at: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-        email_status: 'pending',
-        sheet_status: 'pending',
-        excel_filename: null
-      };
-      leads.unshift(newLead);
-      await store.setJSON('leads_list', leads);
-      return newLead;
-    } catch (err) {
-      console.error('❌ Netlify Blobs insertLead error:', err);
-      throw err;
+  // 1. Supabase Cloud PostgreSQL (shared across all Vercel lambdas)
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+      method: 'POST',
+      headers: supabaseHeaders({ 'Prefer': 'return=representation' }),
+      body: JSON.stringify(leadPayload)
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const saved = rows[0];
+        memoryLeads.unshift(saved);
+        return saved;
+      }
     }
+  } catch (err) {
+    console.warn('⚠️ Supabase insert notice:', err.message);
   }
 
+  // 2. Local SQLite fallback
   if (!useFallback && db) {
     return new Promise((resolve, reject) => {
       const query = `
         INSERT INTO leads (name, phone, area, service, notes, created_at)
         VALUES (?, ?, ?, ?, ?, datetime('now', 'localtime'))
       `;
-      const params = [
-        lead.name.trim(),
-        lead.phone.trim(),
-        lead.area ? lead.area.trim() : 'Not Specified',
-        lead.service ? lead.service.trim() : 'House Painting',
-        lead.notes ? lead.notes.trim() : ''
-      ];
-
+      const params = [leadPayload.name, leadPayload.phone, leadPayload.area, leadPayload.service, leadPayload.notes];
       db.run(query, params, function (err) {
         if (err) return reject(err);
         const leadId = this.lastID;
-        deletedLeadIds.delete(String(leadId));
-        saveDeletedIds();
         db.get(`SELECT * FROM leads WHERE id = ?`, [leadId], (getErr, row) => {
           if (getErr) return reject(getErr);
           resolve(row);
@@ -241,200 +176,131 @@ async function insertLead(lead) {
     });
   }
 
-  // Serverless / Memory Fallback
+  // 3. Memory fallback
   const maxExisting = memoryLeads.length > 0 ? Math.max(...memoryLeads.map(l => Number(l.id) || 0)) : 1000;
   const nextId = Math.max(maxExisting + 1, 1001);
-  deletedLeadIds.delete(String(nextId));
-  saveDeletedIds();
-
-  const newLead = {
-    id: nextId,
-    name: lead.name.trim(),
-    phone: lead.phone.trim(),
-    area: lead.area ? lead.area.trim() : 'Not Specified',
-    service: lead.service ? lead.service.trim() : 'House Painting',
-    notes: lead.notes ? lead.notes.trim() : '',
-    created_at: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-    email_status: 'pending',
-    sheet_status: 'pending',
-    excel_filename: null
-  };
-  memoryLeads.unshift(newLead);
-  saveFallbackLeads();
-  return newLead;
+  const fallbackLead = Object.assign({ id: nextId, created_at: new Date().toISOString() }, leadPayload);
+  memoryLeads.unshift(fallbackLead);
+  return fallbackLead;
 }
 
 /**
- * Update email dispatch status for a lead
+ * Update email status for a lead
  */
 async function updateLeadEmailStatus(id, status, excelFilename = null) {
-  if (isNetlify) {
-    try {
-      const store = getNetlifyStore();
-      const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      const item = leads.find(l => String(l.id) === String(id));
-      if (item) {
-        item.email_status = status;
-        if (excelFilename) item.excel_filename = excelFilename;
-        await store.setJSON('leads_list', leads);
-      }
-      return { updated: item ? 1 : 0 };
-    } catch (err) {
-      return { updated: 0 };
-    }
-  }
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: supabaseHeaders(),
+      body: JSON.stringify({ email_status: status, excel_filename: excelFilename })
+    });
+  } catch (_) {}
 
   if (!useFallback && db) {
-    return new Promise((resolve, reject) => {
-      const query = `
-        UPDATE leads 
-        SET email_status = ?, excel_filename = COALESCE(?, excel_filename)
-        WHERE id = ?
-      `;
-      db.run(query, [status, excelFilename, id], function (err) {
-        if (err) return reject(err);
-        resolve({ updated: this.changes });
-      });
-    });
+    db.run(`UPDATE leads SET email_status = ?, excel_filename = ? WHERE id = ?`, [status, excelFilename, id], () => {});
   }
-
   const item = memoryLeads.find(l => String(l.id) === String(id));
   if (item) {
     item.email_status = status;
     if (excelFilename) item.excel_filename = excelFilename;
-    saveFallbackLeads();
   }
-  return { updated: item ? 1 : 0 };
+  return { updated: 1 };
 }
 
 /**
- * Update Google Sheets sync status for a lead
+ * Update Google Sheets status for a lead
  */
 async function updateLeadSheetStatus(id, status) {
-  if (isNetlify) {
-    try {
-      const store = getNetlifyStore();
-      const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      const item = leads.find(l => String(l.id) === String(id));
-      if (item) {
-        item.sheet_status = status;
-        await store.setJSON('leads_list', leads);
-      }
-      return { updated: item ? 1 : 0 };
-    } catch (err) {
-      return { updated: 0 };
-    }
-  }
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: supabaseHeaders(),
+      body: JSON.stringify({ sheet_status: status })
+    });
+  } catch (_) {}
 
   if (!useFallback && db) {
-    return new Promise((resolve, reject) => {
-      const query = `UPDATE leads SET sheet_status = ? WHERE id = ?`;
-      db.run(query, [status, id], function (err) {
-        if (err) return reject(err);
-        resolve({ updated: this.changes });
-      });
-    });
+    db.run(`UPDATE leads SET sheet_status = ?, id = ? WHERE id = ?`, [status, id, id], () => {});
   }
-
   const item = memoryLeads.find(l => String(l.id) === String(id));
-  if (item) {
-    item.sheet_status = status;
-    saveFallbackLeads();
-  }
-  return { updated: item ? 1 : 0 };
+  if (item) item.sheet_status = status;
+  return { updated: 1 };
 }
 
 /**
  * Retrieve all leads (newest first)
  */
 async function getAllLeads(limit = 100) {
-  if (isNetlify) {
-    try {
-      const store = getNetlifyStore();
-      const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      return leads.filter(l => !deletedLeadIds.has(String(l.id))).slice(0, limit);
-    } catch (err) {
-      return [];
+  // 1. Primary: Fetch from Supabase Cloud PostgreSQL
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leads?select=*&order=id.desc&limit=${limit}`, {
+      headers: supabaseHeaders()
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        memoryLeads = data;
+        return data;
+      }
     }
+  } catch (err) {
+    console.warn('⚠️ Supabase fetch notice:', err.message);
   }
 
+  // 2. Fallback: Local SQLite
   if (!useFallback && db) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       db.all(`SELECT * FROM leads ORDER BY id DESC LIMIT ?`, [limit], (err, rows) => {
-        if (err) return resolve(memoryLeads.filter(l => !deletedLeadIds.has(String(l.id))).slice(0, limit));
-        resolve((rows || []).filter(l => !deletedLeadIds.has(String(l.id))));
+        if (err) return resolve(memoryLeads.slice(0, limit));
+        resolve(rows || []);
       });
     });
   }
 
-  return memoryLeads.filter(l => !deletedLeadIds.has(String(l.id))).slice(0, limit);
+  return memoryLeads.slice(0, limit);
 }
 
 /**
  * Delete a single lead by ID
  */
 async function deleteLead(id) {
-  deletedLeadIds.add(String(id));
-  saveDeletedIds();
-
-  if (isNetlify) {
-    try {
-      const store = getNetlifyStore();
-      let leads = (await store.get('leads_list', { type: 'json' })) || [];
-      const prevLen = leads.length;
-      leads = leads.filter(l => String(l.id) !== String(id));
-      await store.setJSON('leads_list', leads);
-      return { deleted: prevLen - leads.length || 1 };
-    } catch (err) {
-      return { deleted: 1 };
-    }
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/leads?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: supabaseHeaders()
+    });
+  } catch (err) {
+    console.warn('⚠️ Supabase delete notice:', err.message);
   }
 
   if (!useFallback && db) {
-    return new Promise((resolve, reject) => {
-      db.run(`DELETE FROM leads WHERE id = ?`, [id], function (err) {
-        if (err) return reject(err);
-        resolve({ deleted: this.changes || 1 });
-      });
-    });
+    db.run(`DELETE FROM leads WHERE id = ?`, [id], () => {});
   }
 
-  const beforeLen = memoryLeads.length;
+  const prevLen = memoryLeads.length;
   memoryLeads = memoryLeads.filter(l => String(l.id) !== String(id));
-  saveFallbackLeads();
-  return { deleted: beforeLen - memoryLeads.length || 1 };
+  return { deleted: prevLen - memoryLeads.length || 1 };
 }
 
 /**
- * Delete all leads (e.g. wiping test data)
+ * Delete all leads
  */
 async function deleteAllLeads() {
-  memoryLeads.forEach(l => deletedLeadIds.add(String(l.id)));
-  saveDeletedIds();
-
-  if (isNetlify) {
-    try {
-      const store = getNetlifyStore();
-      const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      await store.setJSON('leads_list', []);
-      return { deleted: leads.length };
-    } catch (err) {
-      return { deleted: 0 };
-    }
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/leads?id=gt.0`, {
+      method: 'DELETE',
+      headers: supabaseHeaders()
+    });
+  } catch (err) {
+    console.warn('⚠️ Supabase clear notice:', err.message);
   }
 
   if (!useFallback && db) {
-    return new Promise((resolve, reject) => {
-      db.run(`DELETE FROM leads`, [], function (err) {
-        if (err) return reject(err);
-        resolve({ deleted: this.changes });
-      });
-    });
+    db.run(`DELETE FROM leads`, () => {});
   }
 
   const count = memoryLeads.length;
   memoryLeads = [];
-  saveFallbackLeads();
   return { deleted: count };
 }
 
