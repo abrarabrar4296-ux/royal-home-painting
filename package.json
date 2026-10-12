@@ -1,6 +1,6 @@
 {
   "name": "royal-home-painting",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "Full-stack marketing website and lead capture engine for Royal Home Painting",
   "main": "server.js",
   "scripts": {
