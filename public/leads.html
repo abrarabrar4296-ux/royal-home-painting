@@ -895,6 +895,9 @@
       <div style="display: flex; justify-content: flex-end;">
         <button type="button" class="btn-dash btn-dash-secondary" onclick="closeAppModal()" style="font-size: 0.85rem; padding: 8px 20px;">Close</button>
       </div>
+    </div>
+  </div>
+
   <!-- Website Live Content Editor Modal -->
   <div class="sheet-modal" id="website-editor-modal" onclick="if(event.target===this)closeWebsiteEditorModal()" role="dialog" aria-modal="true" aria-labelledby="we-title">
     <div class="sheet-modal-card" style="max-width: 640px; max-height: 90vh; overflow-y: auto;">
@@ -1023,7 +1026,16 @@
     try {
       const storedDeleted = localStorage.getItem('rhp_deleted_lead_ids');
       if (storedDeleted) {
-        JSON.parse(storedDeleted).forEach(id => deletedLeadIds.add(String(id)));
+        const parsed = JSON.parse(storedDeleted);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(id => {
+            const s = String(id);
+            // Only keep non-clashing IDs (ignore legacy single-digit test IDs 1..9 that could clash)
+            if (s.length > 2 || isNaN(Number(s))) {
+              deletedLeadIds.add(s);
+            }
+          });
+        }
       }
     } catch (_) {}
 
@@ -1524,23 +1536,10 @@
           // Always filter out any lead that the user previously deleted!
           incomingLeads = incomingLeads.filter(l => !deletedLeadIds.has(String(l.id)));
 
-          // If server returned leads, persist to localStorage for offline / instant reload
-          if (incomingLeads.length > 0) {
-            try {
-              localStorage.setItem('rhp_cached_leads', JSON.stringify(incomingLeads));
-            } catch (_) {}
-          } else {
-            // If server returned 0 leads (e.g. cold server), fall back to cached leads in localStorage
-            try {
-              const cached = localStorage.getItem('rhp_cached_leads');
-              if (cached) {
-                const parsed = JSON.parse(cached);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                  incomingLeads = parsed.filter(l => !deletedLeadIds.has(String(l.id)));
-                }
-              }
-            } catch (_) {}
-          }
+          // Persist current live state to localStorage
+          try {
+            localStorage.setItem('rhp_cached_leads', JSON.stringify(incomingLeads));
+          } catch (_) {}
 
           if (isInitialLoad) {
             incomingLeads.forEach(l => knownLeadIds.add(String(l.id)));
@@ -1665,7 +1664,7 @@
                 <a href="${waUrl}" target="_blank" class="btn-dash btn-dash-success" style="padding: 6px 12px; font-size: 0.78rem;">
                   📞 Contact
                 </a>
-                <button onclick="deleteLeadRow(${lead.id})" class="btn-dash btn-dash-secondary" style="padding: 6px 9px; font-size: 0.78rem; border-color: #ef9a9a; color: #c62828; cursor: pointer;" title="Delete this lead">
+                <button onclick="deleteLeadRow('${lead.id}')" class="btn-dash btn-dash-secondary" style="padding: 6px 9px; font-size: 0.78rem; border-color: #ef9a9a; color: #c62828; cursor: pointer;" title="Delete this lead">
                   🗑️
                 </button>
               </div>
@@ -1676,18 +1675,19 @@
     }
 
     async function deleteLeadRow(id) {
-      if (!confirm(`Are you sure you want to delete lead #RHP-${String(id).padStart(4, '0')}?`)) {
+      const idStr = String(id);
+      if (!confirm(`Are you sure you want to delete lead #RHP-${idStr.padStart(4, '0')}?`)) {
         return;
       }
       // 1. Permanently record as deleted in client state immediately
-      deletedLeadIds.add(String(id));
-      knownLeadIds.add(String(id));
+      deletedLeadIds.add(idStr);
+      knownLeadIds.add(idStr);
       try {
         localStorage.setItem('rhp_deleted_lead_ids', JSON.stringify([...deletedLeadIds]));
       } catch (_) {}
 
       // 2. Remove immediately from in-memory allLeads and local cache
-      allLeads = allLeads.filter(l => String(l.id) !== String(id));
+      allLeads = allLeads.filter(l => String(l.id) !== idStr);
       try {
         localStorage.setItem('rhp_cached_leads', JSON.stringify(allLeads));
       } catch (_) {}
@@ -1698,7 +1698,7 @@
 
       // 4. Send delete request to backend (resilient background sync)
       try {
-        await fetch(`${API_BASE}/api/leads/${id}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/api/leads/${idStr}`, { method: 'DELETE' });
       } catch (err) {
         console.warn('Backend delete sync notice:', err.message);
       }
@@ -1737,13 +1737,19 @@
 
     async function openWebsiteEditorModal() {
       const modal = document.getElementById('website-editor-modal');
-      if (modal) modal.style.display = 'flex';
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+      }
       await loadWebsiteEditorData();
     }
 
     function closeWebsiteEditorModal() {
       const modal = document.getElementById('website-editor-modal');
-      if (modal) modal.style.display = 'none';
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
     }
 
     async function loadWebsiteEditorData() {

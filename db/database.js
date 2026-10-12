@@ -188,7 +188,11 @@ async function insertLead(lead) {
     try {
       const store = getNetlifyStore();
       const leads = (await store.get('leads_list', { type: 'json' })) || [];
-      const nextId = leads.length > 0 ? Math.max(...leads.map(l => l.id || 0)) + 1 : 1;
+      const maxExisting = leads.length > 0 ? Math.max(...leads.map(l => Number(l.id) || 0)) : 1000;
+      const nextId = Math.max(maxExisting + 1, 1001);
+      deletedLeadIds.delete(String(nextId));
+      saveDeletedIds();
+
       const newLead = {
         id: nextId,
         name: lead.name.trim(),
@@ -227,6 +231,8 @@ async function insertLead(lead) {
       db.run(query, params, function (err) {
         if (err) return reject(err);
         const leadId = this.lastID;
+        deletedLeadIds.delete(String(leadId));
+        saveDeletedIds();
         db.get(`SELECT * FROM leads WHERE id = ?`, [leadId], (getErr, row) => {
           if (getErr) return reject(getErr);
           resolve(row);
@@ -236,7 +242,11 @@ async function insertLead(lead) {
   }
 
   // Serverless / Memory Fallback
-  const nextId = memoryLeads.length > 0 ? Math.max(...memoryLeads.map(l => l.id || 0)) + 1 : 1;
+  const maxExisting = memoryLeads.length > 0 ? Math.max(...memoryLeads.map(l => Number(l.id) || 0)) : 1000;
+  const nextId = Math.max(maxExisting + 1, 1001);
+  deletedLeadIds.delete(String(nextId));
+  saveDeletedIds();
+
   const newLead = {
     id: nextId,
     name: lead.name.trim(),
