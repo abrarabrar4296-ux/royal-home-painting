@@ -57,10 +57,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.0
-          name: Royal Home Painting Mobile App v1.0.0
+          tag_name: v1.0.1
+          name: Royal Home Painting Mobile App v1.0.1
           body: |
-            ## 🎨 Royal Home Painting Official Android App (v1.0.0)
+            ## 🎨 Royal Home Painting Official Android App (v1.0.1)
             
             Download the official Android mobile app for Royal Home Painting:
             

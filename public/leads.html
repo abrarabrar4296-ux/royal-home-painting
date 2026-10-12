@@ -366,6 +366,183 @@
       background: #ffffff;
     }
 
+    /* Mobile Leads Cards & Adaptive Layout */
+    .leads-mobile-container {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .sheet-wrapper {
+        display: none;
+      }
+      .sheet-wrapper.force-show-table {
+        display: block !important;
+      }
+      .leads-mobile-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .leads-mobile-container.force-hide-cards {
+        display: none !important;
+      }
+    }
+
+    .lead-mobile-card {
+      background: #ffffff;
+      border: 1.5px solid #DFD7CC;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .lead-mobile-card.highlight {
+      border-color: #C44A05;
+      background: #FFFBF7;
+      box-shadow: 0 4px 16px rgba(196, 74, 5, 0.2);
+    }
+
+    .lead-mobile-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid #F0EAE1;
+      padding-bottom: 10px;
+    }
+
+    .lead-mobile-customer {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .lead-mobile-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #111111;
+    }
+
+    .lead-mobile-locality {
+      font-size: 0.86rem;
+      color: #555555;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .lead-mobile-phone-link {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #C44A05;
+      text-decoration: underline;
+      display: inline-block;
+      margin-top: 2px;
+    }
+
+    .lead-mobile-notes {
+      background: #FAF8F5;
+      border-left: 3px solid #C44A05;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.84rem;
+      color: #444444;
+      font-style: italic;
+    }
+
+    .lead-mobile-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-mobile-call {
+      background: #28a745;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(40,167,69,0.2);
+    }
+
+    .btn-mobile-call:active {
+      transform: scale(0.97);
+    }
+
+    .btn-mobile-wa {
+      background: #25D366;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(37,211,102,0.2);
+    }
+
+    .btn-mobile-wa:active {
+      transform: scale(0.97);
+    }
+
+    .btn-mobile-del {
+      background: #FBE9E7;
+      color: #D32F2F;
+      border: 1px solid #FFCDD2;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .view-toggle-wrap {
+      display: inline-flex;
+      background: #FAF8F5;
+      border: 1.5px solid #DFD7CC;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .btn-view-toggle {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #555555;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-view-toggle.active {
+      background: #C44A05;
+      color: #ffffff;
+    }
+
     /* Modal Google Sheets Info */
     .sheet-modal {
       display: none;
@@ -1239,12 +1416,18 @@
         </div>
       </div>
 
-      <div style="font-size: 0.85rem; color: #666666;" id="sync-indicator">
-        🟢 Live Database: <strong id="last-updated">Updating...</strong>
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <div class="view-toggle-wrap" id="mobile-view-toggle-wrap">
+          <button type="button" class="btn-view-toggle active" id="btn-view-cards" onclick="setDashboardViewMode('cards')">📱 Cards</button>
+          <button type="button" class="btn-view-toggle" id="btn-view-table" onclick="setDashboardViewMode('table')">📊 Spreadsheet</button>
+        </div>
+        <div style="font-size: 0.85rem; color: #666666;" id="sync-indicator">
+          🟢 Live Database: <strong id="last-updated">Updating...</strong>
+        </div>
       </div>
     </div>
 
-    <!-- Spreadsheet Data Table -->
+    <!-- Spreadsheet Data Table (Desktop & Tablet) -->
     <div class="sheet-wrapper">
       <table class="sheet-table">
         <thead>
@@ -1265,6 +1448,11 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Mobile Responsive Cards Container (Optimized for Phones & Native Mobile App) -->
+    <div id="leads-mobile-container" class="leads-mobile-container">
+      <div style="text-align: center; padding: 40px; color: #777777; background: #ffffff; border-radius: 8px; border: 1px solid #DFD7CC;">Loading live leads...</div>
     </div>
   </main>
 
@@ -1423,8 +1611,8 @@
           <p style="font-size: 0.85rem; color: #666; margin: 0 0 14px 0; line-height: 1.4;">
             Download the official Android APK standalone application with native WhatsApp messaging and real-time refresh.
           </p>
-          <a id="apk-download-btn" href="https://github.com/abrarabrar4296-ux/royal-home-painting/releases/download/v1.0.0/RoyalHomePainting.apk" download="RoyalHomePainting.apk" class="btn-dash btn-dash-secondary" style="display: flex; width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem; text-decoration: none; border-color: #F0620D; color: #F0620D; font-weight: 700;">
-            ⬇️ Download Android APK (v1.0.0)
+          <a id="apk-download-btn" href="https://github.com/abrarabrar4296-ux/royal-home-painting/releases/download/v1.0.1/RoyalHomePainting.apk" download="RoyalHomePainting.apk" class="btn-dash btn-dash-secondary" style="display: flex; width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.92rem; text-decoration: none; border-color: #F0620D; color: #F0620D; font-weight: 700;">
+            ⬇️ Download Android APK (v1.0.1)
           </a>
         </div>
       </div>
@@ -1596,7 +1784,101 @@
     const isFileProtocol = window.location.protocol === 'file:';
     const API_BASE = (isGithubPages || isFileProtocol) ? 'https://royal-home-painting.vercel.app' : '';
 
+    // Responsive dashboard view mode (Cards vs Spreadsheet Table)
+    let dashboardViewMode = localStorage.getItem('rhp_dash_view_mode') || 'cards';
+    function setDashboardViewMode(mode) {
+      dashboardViewMode = mode;
+      try {
+        localStorage.setItem('rhp_dash_view_mode', mode);
+      } catch (_) {}
+
+      const btnCards = document.getElementById('btn-view-cards');
+      const btnTable = document.getElementById('btn-view-table');
+      const sheetWrapper = document.querySelector('.sheet-wrapper');
+      const mobileContainer = document.getElementById('leads-mobile-container');
+
+      if (btnCards) btnCards.classList.toggle('active', mode === 'cards');
+      if (btnTable) btnTable.classList.toggle('active', mode === 'table');
+
+      if (sheetWrapper) {
+        sheetWrapper.classList.toggle('force-show-table', mode === 'table');
+      }
+      if (mobileContainer) {
+        mobileContainer.classList.toggle('force-hide-cards', mode === 'table');
+      }
+    }
+
+    // Cross-Platform Customer Dialing (Handles Native Mobile App & Web Browser)
+    window.callCustomer = function(rawPhone, event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      const cleanPhone = (rawPhone || '').toString().trim().replace(/[^\d+]/g, '');
+      if (!cleanPhone) {
+        alert('Phone number not available for this lead.');
+        return;
+      }
+
+      // 1. If running inside native Flutter Android app with AppActionChannel
+      if (window.AppActionChannel && typeof window.AppActionChannel.postMessage === 'function') {
+        try {
+          window.AppActionChannel.postMessage(JSON.stringify({ action: 'call', phone: cleanPhone }));
+          if (event) event.preventDefault();
+          return;
+        } catch (_) {}
+      }
+
+      // 2. Normal mobile browser dialer
+      window.location.href = `tel:${cleanPhone}`;
+    };
+
+    // Cross-Platform Customer WhatsApp Messaging (Handles Native Mobile App & Web Browser)
+    window.whatsappCustomer = function(rawPhone, rawName, rawService, rawArea, event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      const cleanPhone = (rawPhone || '').toString().trim().replace(/\D/g, '');
+      const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+      if (!waPhone) {
+        alert('WhatsApp phone number not available for this lead.');
+        return;
+      }
+
+      const name = rawName || 'Customer';
+      const service = rawService || 'Painting Service';
+      const area = rawArea || 'Bangalore';
+      const msg = `Hi ${name}, thank you for contacting Royal Home Painting regarding your ${service} inquiry in ${area}. When can our specialist visit for your free inspection?`;
+      const encodedMsg = encodeURIComponent(msg);
+
+      // 1. If running inside native Flutter Android app with AppActionChannel
+      if (window.AppActionChannel && typeof window.AppActionChannel.postMessage === 'function') {
+        try {
+          window.AppActionChannel.postMessage(JSON.stringify({
+            action: 'whatsapp',
+            phone: waPhone,
+            text: msg
+          }));
+          if (event) event.preventDefault();
+          return;
+        } catch (_) {}
+      }
+
+      // 2. Mobile device: try native whatsapp scheme with web fallback
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+      if (isMobile) {
+        window.location.href = `whatsapp://send?phone=${waPhone}&text=${encodedMsg}`;
+        setTimeout(() => {
+          if (!document.hidden) {
+            window.location.href = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodedMsg}`;
+          }
+        }, 1200);
+      } else {
+        window.open(`https://api.whatsapp.com/send?phone=${waPhone}&text=${encodedMsg}`, '_blank', 'noopener,noreferrer');
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
+      setDashboardViewMode(dashboardViewMode);
       // 1. Instant local cache restore so user sees leads immediately without waiting
       try {
         const cached = localStorage.getItem('rhp_cached_leads');
@@ -1868,14 +2150,14 @@
         <div class="toast-details">
           📍 <strong>${escapeHtml(lead.area || 'Bangalore')}</strong> &bull; 
           🛠️ ${escapeHtml(lead.service || 'House Painting')}<br>
-          📞 <a href="tel:${lead.phone}" style="color: #FFB74D; font-weight: 700; text-decoration: underline;">${escapeHtml(lead.phone)}</a>
+          📞 <a href="tel:${cleanPhone}" onclick="callCustomer('${escapeHtml(lead.phone)}', event)" style="color: #FFB74D; font-weight: 700; text-decoration: underline;">${escapeHtml(lead.phone)}</a>
           ${lead.notes ? `<br><em style="color: #bbb;">"${escapeHtml(lead.notes)}"</em>` : ''}
         </div>
         ${showActions ? `
         <div class="toast-actions">
-          <a href="tel:${lead.phone}" class="toast-btn toast-btn-call">📞 Call Customer</a>
-          <a href="${waUrl}" target="_blank" rel="noopener" class="toast-btn toast-btn-wa">💬 WhatsApp</a>
-          <button onclick="highlightLeadRow('${lead.id}'); dismissToast('${toastId}');" class="toast-btn toast-btn-view">👁️ View in Table</button>
+          <button type="button" onclick="callCustomer('${escapeHtml(lead.phone)}', event)" class="toast-btn toast-btn-call">📞 Call Customer</button>
+          <button type="button" onclick="whatsappCustomer('${escapeHtml(lead.phone)}', '${escapeHtml(lead.name)}', '${escapeHtml(lead.service)}', '${escapeHtml(lead.area)}', event)" class="toast-btn toast-btn-wa">💬 WhatsApp</button>
+          <button type="button" onclick="highlightLeadRow('${lead.id}'); dismissToast('${toastId}');" class="toast-btn toast-btn-view">👁️ View in Table</button>
         </div>
         ` : ''}
       `;
@@ -1897,14 +2179,20 @@
       }, 350);
     }
 
-    // Scroll to & highlight lead row in table
+    // Scroll to & highlight lead row or mobile card
     function highlightLeadRow(leadId) {
       const row = document.getElementById(`lead-row-${leadId}`);
-      if (row) {
+      const card = document.getElementById(`lead-card-${leadId}`);
+      if (card && window.innerWidth <= 768) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('highlight');
+        setTimeout(() => card.classList.remove('highlight'), 5000);
+      } else if (row) {
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
         row.classList.remove('row-highlight-new');
         void row.offsetWidth; // trigger reflow
         row.classList.add('row-highlight-new');
+        setTimeout(() => row.classList.remove('row-highlight-new'), 7000);
       }
     }
 
@@ -2539,62 +2827,124 @@
 
     function renderTable(leads) {
       const tbody = document.getElementById('leads-tbody');
-      if (!tbody) return;
+      const mobileContainer = document.getElementById('leads-mobile-container');
 
       if (!leads.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 36px; color: #888;">No matching leads found.</td></tr>`;
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 36px; color: #888;">No matching leads found.</td></tr>`;
+        }
+        if (mobileContainer) {
+          mobileContainer.innerHTML = `<div style="text-align: center; padding: 36px; color: #888; background: #ffffff; border-radius: 12px; border: 1.5px solid #DFD7CC;">No matching leads found.</div>`;
+        }
         return;
       }
 
-      tbody.innerHTML = leads.map(lead => {
-        const idFormatted = `#RHP-${String(lead.id).padStart(4, '0')}`;
-        
-        // Service pill class
-        let pillClass = 'pill-painting';
-        if ((lead.service || '').includes('Both')) {
-          pillClass = 'pill-both';
-        } else if ((lead.service || '').includes('Waterproofing')) {
-          pillClass = 'pill-waterproofing';
-        }
+      // 1. Populate Desktop / Spreadsheet Table
+      if (tbody) {
+        tbody.innerHTML = leads.map(lead => {
+          const idFormatted = `#RHP-${String(lead.id).padStart(4, '0')}`;
+          
+          let pillClass = 'pill-painting';
+          if ((lead.service || '').includes('Both')) {
+            pillClass = 'pill-both';
+          } else if ((lead.service || '').includes('Waterproofing')) {
+            pillClass = 'pill-waterproofing';
+          }
 
-        // WhatsApp direct customer message link
-        const cleanPhone = (lead.phone || '').replace(/\D/g, '');
-        const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-        const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(
-          `Hi ${lead.name}, thank you for contacting Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When can our specialist visit for your free inspection?`
-        )}`;
+          const cleanPhone = (lead.phone || '').replace(/\D/g, '');
+          const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+          const telPhone = (lead.phone || '').trim().replace(/[^\d+]/g, '');
+          const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(
+            `Hi ${lead.name}, thank you for contacting Royal Home Painting regarding your ${lead.service} inquiry in ${lead.area || 'Bangalore'}. When can our specialist visit for your free inspection?`
+          )}`;
 
-        return `
-          <tr id="lead-row-${lead.id}">
-            <td><span class="lead-badge">${idFormatted}</span></td>
-            <td style="color: #666; font-size: 0.85rem;">${lead.created_at || 'Just now'}</td>
-            <td><strong>${escapeHtml(lead.name)}</strong></td>
-            <td>
-              <div class="phone-cell">
-                <a href="tel:${lead.phone}" style="font-weight: 700; color: #C44A05; text-decoration: underline;">
-                  ${escapeHtml(lead.phone)}
-                </a>
-                <a href="${waUrl}" target="_blank" rel="noopener" class="btn-cell-wa" title="Message customer on WhatsApp">
-                  💬
-                </a>
+          return `
+            <tr id="lead-row-${lead.id}">
+              <td><span class="lead-badge">${idFormatted}</span></td>
+              <td style="color: #666; font-size: 0.85rem;">${lead.created_at || 'Just now'}</td>
+              <td><strong>${escapeHtml(lead.name)}</strong></td>
+              <td>
+                <div class="phone-cell">
+                  <a href="tel:${telPhone}" onclick="callCustomer('${escapeHtml(lead.phone)}', event)" style="font-weight: 700; color: #C44A05; text-decoration: underline;" title="Click to call customer">
+                    ${escapeHtml(lead.phone)}
+                  </a>
+                  <a href="${waUrl}" onclick="whatsappCustomer('${escapeHtml(lead.phone)}', '${escapeHtml(lead.name)}', '${escapeHtml(lead.service)}', '${escapeHtml(lead.area)}', event)" target="_blank" rel="noopener" class="btn-cell-wa" title="Message customer on WhatsApp">
+                    💬
+                  </a>
+                </div>
+              </td>
+              <td>${escapeHtml(lead.area || 'Bangalore')}</td>
+              <td><span class="service-pill ${pillClass}">${escapeHtml(lead.service || 'House Painting')}</span></td>
+              <td class="notes-cell" title="${escapeHtml(lead.notes || 'None')}">${escapeHtml(lead.notes || '—')}</td>
+              <td>
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                  <button type="button" onclick="callCustomer('${escapeHtml(lead.phone)}', event)" class="btn-dash" style="background: #28a745; color: #ffffff; padding: 6px 10px; font-size: 0.78rem; border: none; cursor: pointer; border-radius: 6px;" title="Call Customer">
+                    📞 Call
+                  </button>
+                  <button type="button" onclick="whatsappCustomer('${escapeHtml(lead.phone)}', '${escapeHtml(lead.name)}', '${escapeHtml(lead.service)}', '${escapeHtml(lead.area)}', event)" class="btn-dash btn-dash-success" style="padding: 6px 10px; font-size: 0.78rem; border: none; cursor: pointer; border-radius: 6px;" title="Chat on WhatsApp">
+                    💬 WhatsApp
+                  </button>
+                  <button type="button" onclick="deleteLeadRow('${lead.id}')" class="btn-dash btn-dash-secondary" style="padding: 6px 9px; font-size: 0.78rem; border-color: #ef9a9a; color: #c62828; cursor: pointer;" title="Delete this lead">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // 2. Populate Mobile Cards View (Optimized for Mobile Screens & Native Android APK)
+      if (mobileContainer) {
+        mobileContainer.innerHTML = leads.map(lead => {
+          const idFormatted = `#RHP-${String(lead.id).padStart(4, '0')}`;
+
+          let pillClass = 'pill-painting';
+          if ((lead.service || '').includes('Both')) {
+            pillClass = 'pill-both';
+          } else if ((lead.service || '').includes('Waterproofing')) {
+            pillClass = 'pill-waterproofing';
+          }
+
+          const telPhone = (lead.phone || '').trim().replace(/[^\d+]/g, '');
+
+          return `
+            <div class="lead-mobile-card" id="lead-card-${lead.id}">
+              <div class="lead-mobile-top">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="lead-badge">${idFormatted}</span>
+                  <span style="color: #777777; font-size: 0.78rem;">${lead.created_at || 'Just now'}</span>
+                </div>
+                <span class="service-pill ${pillClass}">${escapeHtml(lead.service || 'House Painting')}</span>
               </div>
-            </td>
-            <td>${escapeHtml(lead.area || 'Bangalore')}</td>
-            <td><span class="service-pill ${pillClass}">${escapeHtml(lead.service || 'House Painting')}</span></td>
-            <td class="notes-cell" title="${escapeHtml(lead.notes || 'None')}">${escapeHtml(lead.notes || '—')}</td>
-            <td>
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <a href="${waUrl}" target="_blank" class="btn-dash btn-dash-success" style="padding: 6px 12px; font-size: 0.78rem;">
-                  📞 Contact
-                </a>
-                <button onclick="deleteLeadRow('${lead.id}')" class="btn-dash btn-dash-secondary" style="padding: 6px 9px; font-size: 0.78rem; border-color: #ef9a9a; color: #c62828; cursor: pointer;" title="Delete this lead">
+              <div class="lead-mobile-customer">
+                <div class="lead-mobile-name">${escapeHtml(lead.name)}</div>
+                <div class="lead-mobile-locality">
+                  <span>📍</span>
+                  <span>${escapeHtml(lead.area || 'Bangalore')}</span>
+                </div>
+                <div>
+                  <a href="tel:${telPhone}" onclick="callCustomer('${escapeHtml(lead.phone)}', event)" class="lead-mobile-phone-link">
+                    📞 ${escapeHtml(lead.phone)}
+                  </a>
+                </div>
+              </div>
+              ${lead.notes ? `<div class="lead-mobile-notes">“${escapeHtml(lead.notes)}”</div>` : ''}
+              <div class="lead-mobile-actions">
+                <button type="button" class="btn-mobile-call" onclick="callCustomer('${escapeHtml(lead.phone)}', event)">
+                  📞 Call Customer
+                </button>
+                <button type="button" class="btn-mobile-wa" onclick="whatsappCustomer('${escapeHtml(lead.phone)}', '${escapeHtml(lead.name)}', '${escapeHtml(lead.service)}', '${escapeHtml(lead.area)}', event)">
+                  💬 WhatsApp
+                </button>
+                <button type="button" class="btn-mobile-del" onclick="deleteLeadRow('${lead.id}')" title="Delete this lead">
                   🗑️
                 </button>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            </div>
+          `;
+        }).join('');
+      }
     }
 
     async function deleteLeadRow(id) {

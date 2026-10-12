@@ -327,6 +327,63 @@ class _WebViewScreenState extends State<WebViewScreen> {
     );
   }
 
+  Future<void> _launchWhatsApp(String url) async {
+    try {
+      final parsed = Uri.parse(url);
+      String? phone = parsed.queryParameters['phone'];
+      if (phone == null && url.contains('wa.me/')) {
+        final seg = parsed.pathSegments;
+        if (seg.isNotEmpty) phone = seg.last;
+      }
+      final text = parsed.queryParameters['text'] ?? '';
+      final cleanPhone = (phone ?? '919380017556').replaceAll(RegExp(r'\D'), '');
+      final formattedPhone = cleanPhone.length == 10 ? '91$cleanPhone' : cleanPhone;
+      final encodedText = Uri.encodeComponent(text);
+
+      final nativeAppUri = Uri.parse(
+        'whatsapp://send?phone=$formattedPhone&text=$encodedText',
+      );
+      final webFallbackUri = Uri.parse(
+        'https://api.whatsapp.com/send?phone=$formattedPhone&text=$encodedText',
+      );
+
+      // Try native app scheme first
+      if (await canLaunchUrl(nativeAppUri)) {
+        await launchUrl(nativeAppUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+
+      // Try web/universal link fallback
+      if (await canLaunchUrl(webFallbackUri)) {
+        await launchUrl(webFallbackUri, mode: LaunchMode.externalApplication);
+        return;
+      }
+
+      // Direct fallback attempt
+      await launchUrl(nativeAppUri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Error launching WhatsApp: $e');
+      try {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _launchPhone(String url) async {
+    try {
+      final cleanNumber = url.replaceFirst('tel:', '').replaceAll(RegExp(r'[^\d+]'), '');
+      if (cleanNumber.isEmpty) return;
+      final telUri = Uri(scheme: 'tel', path: cleanNumber);
+      if (await canLaunchUrl(telUri)) {
+        await launchUrl(telUri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(telUri);
+      }
+    } catch (e) {
+      debugPrint('Error launching phone: $e');
+    }
+  }
+
   void _initWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -343,6 +400,26 @@ class _WebViewScreenState extends State<WebViewScreen> {
               area: data['area']?.toString() ?? 'Bangalore',
               notes: data['notes']?.toString() ?? '',
             );
+          } catch (_) {}
+        },
+      )
+      ..addJavaScriptChannel(
+        'AppActionChannel',
+        onMessageReceived: (JavaScriptMessage message) {
+          try {
+            final data = jsonDecode(message.message);
+            final action = data['action']?.toString();
+            if (action == 'call') {
+              final phone = data['phone']?.toString() ?? '';
+              _launchPhone('tel:$phone');
+            } else if (action == 'whatsapp') {
+              final phone = data['phone']?.toString() ?? '';
+              final text = data['text']?.toString() ?? '';
+              final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+              final waPhone = cleanPhone.length == 10 ? '91$cleanPhone' : cleanPhone;
+              final waUrl = 'https://api.whatsapp.com/send?phone=$waPhone&text=${Uri.encodeComponent(text)}';
+              _launchWhatsApp(waUrl);
+            }
           } catch (_) {}
         },
       )
@@ -379,7 +456,34 @@ class _WebViewScreenState extends State<WebViewScreen> {
             ''');
           },
           onWebResourceError: (WebResourceError error) {
-            if (error.isForMainFrame ?? true) {
+            final desc = error.description.toLowerCase();
+            final failingUrl = error.url?.toLowerCase() ?? '';
+
+            // Ignore intentional cancellations or external app handoffs (net::ERR_ABORTED -3)
+            if (error.errorCode == -3 || desc.contains('err_aborted')) {
+              return;
+            }
+
+            // Ignore external intent / unhandled scheme handoffs (net::ERR_UNKNOWN_URL_SCHEME -10)
+            if (error.errorCode == -10 ||
+                desc.contains('err_unknown_url_scheme') ||
+                failingUrl.startsWith('tel:') ||
+                failingUrl.startsWith('whatsapp:') ||
+                failingUrl.startsWith('intent:') ||
+                failingUrl.startsWith('mailto:') ||
+                failingUrl.contains('wa.me') ||
+                failingUrl.contains('api.whatsapp.com') ||
+                failingUrl.contains('instagram.com')) {
+              return;
+            }
+
+            // Only mark error if the main dashboard page failed to load from network
+            final isMainFrame = error.isForMainFrame ?? true;
+            final isAppHost = failingUrl.isEmpty ||
+                failingUrl.contains('royal-home-painting.vercel.app') ||
+                failingUrl.contains('localhost');
+
+            if (isMainFrame && isAppHost) {
               setState(() {
                 _hasError = true;
                 _isLoading = false;
@@ -401,38 +505,43 @@ class _WebViewScreenState extends State<WebViewScreen> {
               return NavigationDecision.prevent;
             }
 
-            // 2. Handle WhatsApp, Tel, and Mailto intents natively
+            // 2. Handle WhatsApp natively
             if (url.startsWith('https://wa.me') ||
                 url.startsWith('https://api.whatsapp.com') ||
-                url.startsWith('whatsapp://') ||
-                url.startsWith('tel:') ||
-                url.startsWith('mailto:')) {
-              if (url.contains('whatsapp') || url.contains('wa.me')) {
-                final parsed = Uri.parse(url);
-                String? phone = parsed.queryParameters['phone'];
-                if (phone == null && url.contains('wa.me/')) {
-                  final seg = parsed.pathSegments;
-                  if (seg.isNotEmpty) phone = seg.last;
-                }
-                final text = parsed.queryParameters['text'] ?? '';
-                final cleanPhone = (phone ?? '919380017556').replaceAll(RegExp(r'\D'), '');
-                final nativeAppUri = Uri.parse(
-                  'whatsapp://send?phone=$cleanPhone&text=${Uri.encodeComponent(text)}',
-                );
-                if (await canLaunchUrl(nativeAppUri)) {
-                  await launchUrl(nativeAppUri, mode: LaunchMode.externalApplication);
-                  return NavigationDecision.prevent;
-                }
-              }
-
-              final uri = Uri.parse(url);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-                return NavigationDecision.prevent;
-              }
+                url.startsWith('whatsapp://')) {
+              _launchWhatsApp(url);
+              return NavigationDecision.prevent;
             }
 
-            // Handle file downloads externally so Android's native download manager/browser handles them
+            // 3. Handle Phone Dialer natively
+            if (url.startsWith('tel:')) {
+              _launchPhone(url);
+              return NavigationDecision.prevent;
+            }
+
+            // 4. Handle Mailto natively
+            if (url.startsWith('mailto:')) {
+              try {
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              } catch (_) {}
+              return NavigationDecision.prevent;
+            }
+
+            // 5. Handle Android Intent links
+            if (url.startsWith('intent:')) {
+              try {
+                final match = RegExp(r'#Intent;.*?S\.browser_fallback_url=([^;]+);').firstMatch(url);
+                if (match != null) {
+                  final fallbackUrl = Uri.decodeComponent(match.group(1)!);
+                  launchUrl(Uri.parse(fallbackUrl), mode: LaunchMode.externalApplication);
+                } else if (url.contains('whatsapp')) {
+                  _launchWhatsApp(url);
+                }
+              } catch (_) {}
+              return NavigationDecision.prevent;
+            }
+
+            // 6. Handle file downloads externally so Android's native download manager/browser handles them
             if (url.endsWith('.xlsx') ||
                 url.endsWith('.csv') ||
                 url.endsWith('.zip') ||
@@ -440,12 +549,15 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 url.contains('/export-excel') ||
                 url.contains('/api/leads.csv') ||
                 url.contains('/downloads/')) {
-              final uri = Uri.parse(url);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-                return NavigationDecision.prevent;
-              }
+              try {
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              } catch (_) {}
+              return NavigationDecision.prevent;
             }
+
             return NavigationDecision.navigate;
           },
         ),
@@ -519,7 +631,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                               _hasError = false;
                               _isLoading = true;
                             });
-                            _controller.reload();
+                            _controller.loadRequest(Uri.parse(_initialUrl));
                           },
                           icon: const Icon(Icons.refresh),
                           label: const Text('Retry'),
