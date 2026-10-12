@@ -1,4 +1,4 @@
-const CACHE_NAME = 'royal-leads-v3';
+const CACHE_NAME = 'royal-leads-v4';
 const ASSETS_TO_CACHE = [
   '/leads.html',
   '/css/style.css',
